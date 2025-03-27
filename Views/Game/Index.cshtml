@@ -1,0 +1,11 @@
+@model List<string>
+
+<h2>Oyunlar</h2>
+<ul>
+    @foreach (var game in Model)
+    {
+        <li>
+            <a asp-controller="Game" asp-action="Start" asp-route-gameName="@game">@game</a>
+        </li>
+    }
+</ul>

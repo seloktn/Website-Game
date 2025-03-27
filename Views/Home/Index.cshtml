@@ -1,0 +1,26 @@
+﻿@model List<ECommerceGameSite.Models.Product>
+
+<h2>Ürünler</h2>
+<div class="product-list">
+    @foreach (var product in Model)
+    {
+        <div class="product-item">
+            <img src="@product.ImageUrl" alt="@product.Name" width="150" />
+            <h3>@product.Name</h3>
+            <p>@product.Description</p>
+            <p><strong>Fiyat:</strong> @product.Price TL</p>
+        </div>
+    }
+</div>
+
+<style>
+    .product-list {
+        display: flex;
+        gap: 20px;
+    }
+    .product-item {
+        border: 1px solid #ddd;
+        padding: 10px;
+        text-align: center;
+    }
+</style>
