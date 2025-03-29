@@ -28,3 +28,4 @@ C:\Users\okano\ECommerceGameSite\obj\Debug\net8.0\refint\ECommerceGameSite.dll
 C:\Users\okano\ECommerceGameSite\obj\Debug\net8.0\ECommerceGameSite.pdb
 C:\Users\okano\ECommerceGameSite\obj\Debug\net8.0\ECommerceGameSite.genruntimeconfig.cache
 C:\Users\okano\ECommerceGameSite\obj\Debug\net8.0\ref\ECommerceGameSite.dll
+C:\Users\okano\ECommerceGameSite\obj\Debug\net8.0\ECommerceGameSite.sourcelink.json

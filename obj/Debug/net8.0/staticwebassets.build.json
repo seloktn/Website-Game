@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "+/SWQs5pTC3URam+qmXdgZsNF0TzK0ZehJ0Bg9uIkx4=",
+  "Hash": "VsF0hZnyQvxFN0YJ7b5zUDaBJzdE/+yQjGnLfOtj9z0=",
   "Source": "ECommerceGameSite",
   "BasePath": "_content/ECommerceGameSite",
   "Mode": "Default",
@@ -129,6 +129,25 @@
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot\\games\\x\\start.html"
+    },
+    {
+      "Identity": "C:\\Users\\okano\\ECommerceGameSite\\wwwroot\\images\\cocacola.jpg",
+      "SourceId": "ECommerceGameSite",
+      "SourceType": "Discovered",
+      "ContentRoot": "C:\\Users\\okano\\ECommerceGameSite\\wwwroot\\",
+      "BasePath": "_content/ECommerceGameSite",
+      "RelativePath": "images/cocacola.jpg",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\images\\cocacola.jpg"
     },
     {
       "Identity": "C:\\Users\\okano\\ECommerceGameSite\\wwwroot\\images\\redbull.jpg",

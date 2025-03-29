@@ -21,6 +21,10 @@
       "PackagePath": "staticwebassets\\games\\x\\start.html"
     },
     {
+      "Id": "C:\\Users\\okano\\ECommerceGameSite\\wwwroot\\images\\cocacola.jpg",
+      "PackagePath": "staticwebassets\\images\\cocacola.jpg"
+    },
+    {
       "Id": "C:\\Users\\okano\\ECommerceGameSite\\wwwroot\\images\\redbull.jpg",
       "PackagePath": "staticwebassets\\images\\redbull.jpg"
     },

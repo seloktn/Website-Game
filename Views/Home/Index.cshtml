@@ -7,6 +7,12 @@
         <div class="product-item">
             <img src="@product.ImageUrl" alt="@product.Name" width="150" />
             <h3>@product.Name</h3>
+            
+            @if (product.IsRecommended)
+            {
+                <span class="badge bg-warning text-dark">Önerilen</span>
+            }
+            
             <p>@product.Description</p>
             <p><strong>Fiyat:</strong> @product.Price TL</p>
         </div>
@@ -22,5 +28,16 @@
         border: 1px solid #ddd;
         padding: 10px;
         text-align: center;
+        position: relative;
+    }
+    .badge {
+        position: absolute;
+        top: 5px;
+        right: 5px;
+        padding: 5px 10px;
+        background-color: gold;
+        color: black;
+        font-weight: bold;
+        border-radius: 5px;
     }
 </style>

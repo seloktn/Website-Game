@@ -1,19 +1,19 @@
 @model List<ECommerceGameSite.Models.Product>
 
 <h2>Ürünler</h2>
-<div class="row">
+<div class="product-list">
     @foreach (var product in Model)
     {
-        <div class="col-md-4">
-            <div class="card">
-                <img src="@product.ImageUrl" class="card-img-top" alt="@product.Name">
-                <div class="card-body">
-                    <h5 class="card-title">@product.Name</h5>
-                    <p class="card-text">@product.Description</p>
-                    <p><strong>Fiyat:</strong> @product.Price ₺</p>
-                    <a href="#" class="btn btn-primary">Sepete Ekle</a>
-                </div>
-            </div>
+        <div class="product-item">
+            <img src="@product.ImageUrl" alt="@product.Name" width="150" />
+            <h3>@product.Name</h3>
+            <p>@product.Description</p>
+            <p><strong>Fiyat:</strong> @product.Price TL</p>
+            @if (product.IsRecommended)
+            {
+                <p><strong>Önerilen Ürün</strong></p>
+            }
+            <a href="@Url.Action("Detail", "Product", new { id = product.Id })" class="btn btn-primary">Detaylar</a>
         </div>
     }
 </div>
