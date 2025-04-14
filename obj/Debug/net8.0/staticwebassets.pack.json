@@ -13,6 +13,98 @@
       "PackagePath": "staticwebassets\\favicon.ico"
     },
     {
+      "Id": "C:\\Users\\okano\\ECommerceGameSite\\wwwroot\\games\\x\\assets\\alien.png",
+      "PackagePath": "staticwebassets\\games\\x\\assets\\alien.png"
+    },
+    {
+      "Id": "C:\\Users\\okano\\ECommerceGameSite\\wwwroot\\games\\x\\assets\\background.png",
+      "PackagePath": "staticwebassets\\games\\x\\assets\\background.png"
+    },
+    {
+      "Id": "C:\\Users\\okano\\ECommerceGameSite\\wwwroot\\games\\x\\assets\\bird.png",
+      "PackagePath": "staticwebassets\\games\\x\\assets\\bird.png"
+    },
+    {
+      "Id": "C:\\Users\\okano\\ECommerceGameSite\\wwwroot\\games\\x\\assets\\breakingPlatform.png",
+      "PackagePath": "staticwebassets\\games\\x\\assets\\breakingPlatform.png"
+    },
+    {
+      "Id": "C:\\Users\\okano\\ECommerceGameSite\\wwwroot\\games\\x\\assets\\bullet.png",
+      "PackagePath": "staticwebassets\\games\\x\\assets\\bullet.png"
+    },
+    {
+      "Id": "C:\\Users\\okano\\ECommerceGameSite\\wwwroot\\games\\x\\assets\\coin.png",
+      "PackagePath": "staticwebassets\\games\\x\\assets\\coin.png"
+    },
+    {
+      "Id": "C:\\Users\\okano\\ECommerceGameSite\\wwwroot\\games\\x\\assets\\ground.png",
+      "PackagePath": "staticwebassets\\games\\x\\assets\\ground.png"
+    },
+    {
+      "Id": "C:\\Users\\okano\\ECommerceGameSite\\wwwroot\\games\\x\\assets\\movingPlatform.png",
+      "PackagePath": "staticwebassets\\games\\x\\assets\\movingPlatform.png"
+    },
+    {
+      "Id": "C:\\Users\\okano\\ECommerceGameSite\\wwwroot\\games\\x\\assets\\platform.png",
+      "PackagePath": "staticwebassets\\games\\x\\assets\\platform.png"
+    },
+    {
+      "Id": "C:\\Users\\okano\\ECommerceGameSite\\wwwroot\\games\\x\\assets\\platformSpace.png",
+      "PackagePath": "staticwebassets\\games\\x\\assets\\platformSpace.png"
+    },
+    {
+      "Id": "C:\\Users\\okano\\ECommerceGameSite\\wwwroot\\games\\x\\assets\\player.png",
+      "PackagePath": "staticwebassets\\games\\x\\assets\\player.png"
+    },
+    {
+      "Id": "C:\\Users\\okano\\ECommerceGameSite\\wwwroot\\games\\x\\assets\\trophy.png",
+      "PackagePath": "staticwebassets\\games\\x\\assets\\trophy.png"
+    },
+    {
+      "Id": "C:\\Users\\okano\\ECommerceGameSite\\wwwroot\\games\\x\\assets\\ufo.png",
+      "PackagePath": "staticwebassets\\games\\x\\assets\\ufo.png"
+    },
+    {
+      "Id": "C:\\Users\\okano\\ECommerceGameSite\\wwwroot\\games\\x\\assets\\ui\\game_over_screen_sky.png",
+      "PackagePath": "staticwebassets\\games\\x\\assets\\ui\\game_over_screen_sky.png"
+    },
+    {
+      "Id": "C:\\Users\\okano\\ECommerceGameSite\\wwwroot\\games\\x\\assets\\ui\\game_over_text_sky.png",
+      "PackagePath": "staticwebassets\\games\\x\\assets\\ui\\game_over_text_sky.png"
+    },
+    {
+      "Id": "C:\\Users\\okano\\ECommerceGameSite\\wwwroot\\games\\x\\assets\\ui\\game_over_text_space.png",
+      "PackagePath": "staticwebassets\\games\\x\\assets\\ui\\game_over_text_space.png"
+    },
+    {
+      "Id": "C:\\Users\\okano\\ECommerceGameSite\\wwwroot\\games\\x\\assets\\ui\\health_bar.png",
+      "PackagePath": "staticwebassets\\games\\x\\assets\\ui\\health_bar.png"
+    },
+    {
+      "Id": "C:\\Users\\okano\\ECommerceGameSite\\wwwroot\\games\\x\\assets\\ui\\health_point.png",
+      "PackagePath": "staticwebassets\\games\\x\\assets\\ui\\health_point.png"
+    },
+    {
+      "Id": "C:\\Users\\okano\\ECommerceGameSite\\wwwroot\\games\\x\\assets\\ui\\restart_button.png",
+      "PackagePath": "staticwebassets\\games\\x\\assets\\ui\\restart_button.png"
+    },
+    {
+      "Id": "C:\\Users\\okano\\ECommerceGameSite\\wwwroot\\games\\x\\assets\\ui\\restart_button_space.png",
+      "PackagePath": "staticwebassets\\games\\x\\assets\\ui\\restart_button_space.png"
+    },
+    {
+      "Id": "C:\\Users\\okano\\ECommerceGameSite\\wwwroot\\games\\x\\assets\\ui\\score_panel.png",
+      "PackagePath": "staticwebassets\\games\\x\\assets\\ui\\score_panel.png"
+    },
+    {
+      "Id": "C:\\Users\\okano\\ECommerceGameSite\\wwwroot\\games\\x\\assets\\ui\\victory_screen.png",
+      "PackagePath": "staticwebassets\\games\\x\\assets\\ui\\victory_screen.png"
+    },
+    {
+      "Id": "C:\\Users\\okano\\ECommerceGameSite\\wwwroot\\games\\x\\assets\\ui\\victory_text_space.png",
+      "PackagePath": "staticwebassets\\games\\x\\assets\\ui\\victory_text_space.png"
+    },
+    {
       "Id": "C:\\Users\\okano\\ECommerceGameSite\\wwwroot\\games\\x\\game.js",
       "PackagePath": "staticwebassets\\games\\x\\game.js"
     },
@@ -21,8 +113,12 @@
       "PackagePath": "staticwebassets\\games\\x\\start.html"
     },
     {
-      "Id": "C:\\Users\\okano\\ECommerceGameSite\\wwwroot\\images\\cocacola.jpg",
-      "PackagePath": "staticwebassets\\images\\cocacola.jpg"
+      "Id": "C:\\Users\\okano\\ECommerceGameSite\\wwwroot\\images\\cocacola.png",
+      "PackagePath": "staticwebassets\\images\\cocacola.png"
+    },
+    {
+      "Id": "C:\\Users\\okano\\ECommerceGameSite\\wwwroot\\images\\coin.png",
+      "PackagePath": "staticwebassets\\images\\coin.png"
     },
     {
       "Id": "C:\\Users\\okano\\ECommerceGameSite\\wwwroot\\images\\redbull.jpg",
