@@ -113,6 +113,10 @@
       "PackagePath": "staticwebassets\\games\\x\\start.html"
     },
     {
+      "Id": "C:\\Users\\okano\\ECommerceGameSite\\wwwroot\\images\\Terlik.png",
+      "PackagePath": "staticwebassets\\images\\Terlik.png"
+    },
+    {
       "Id": "C:\\Users\\okano\\ECommerceGameSite\\wwwroot\\images\\cocacola.png",
       "PackagePath": "staticwebassets\\images\\cocacola.png"
     },

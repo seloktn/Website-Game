@@ -1,31 +1,37 @@
 
-const config = {
-    type: Phaser.AUTO,
-    width: 560,
-    height: 1050,
-    scale: {
-        mode: Phaser.Scale.FIT,       // Ekrana sığdır
-        autoCenter: Phaser.Scale.CENTER_BOTH, // Ortala
-        width: 560,
-        height: 1050
-    },
-    physics: {
+    const config = {
+      type: Phaser.AUTO,
+      width: 560,
+      height: 1050,
+      scale: {
+        mode: Phaser.Scale.FIT,
+        autoCenter: Phaser.Scale.CENTER_BOTH,
+      },
+      physics: {
         default: 'arcade',
         arcade: {
-            gravity: { y: 1000 },
-            debug: false
+          gravity: { y: 1000 },
+          debug: false
         }
-    },
-    scene: {
+      },
+      scene: {
         preload: preload,
         create: create,
         update: update
-    },
-    pixelArt: true
- 
-};
+      }
+    };
+    let recommendedImages = [];
 
-const game = new Phaser.Game(config);
+    // İlk önce coin görsellerini al
+    fetch('/api/product/recommendedImages')
+      .then(res => res.json())
+      .then(images => {
+        recommendedImages = images;
+    
+    new Phaser.Game(config);
+  });
+
+
 const DEBUG_COLLISIONS = false;
 let cursors;
 let normalPlatforms;
@@ -65,19 +71,18 @@ function preload() {
     this.load.image('platformSpace', 'assets/platformSpace.png');
     this.load.image('movingPlatform', 'assets/movingPlatform.png');
     this.load.image('breakingPlatform', 'assets/breakingPlatform.png');
-    //this.load.image('phantomPlatform', 'assets/phantomPlatform.png');
+
     this.load.image('player', 'assets/player.png');
-    //this.load.image('coin', 'assets/coin.png');
+
     this.load.image('ground', 'assets/ground.png');
     this.load.image('bird', 'assets/bird.png');
     this.load.image('ufo', 'assets/ufo.png');
     this.load.image('alien', 'assets/alien.png');
     this.load.image('bullet', 'assets/bullet.png');
-    
 
     this.load.image('trophy', 'assets/trophy.png');
 
-
+    
     this.load.image('scorePanel', 'assets/ui/score_panel.png');
     this.load.image('healthBar', 'assets/ui/health_bar.png');
     this.load.image('healthPoint', 'assets/ui/health_point.png');
@@ -92,31 +97,10 @@ function preload() {
     this.load.image('restartButtonSpace', 'assets/ui/restart_button_space.png');
     this.load.image('victoryTextSpace', 'assets/ui/victory_text_space.png');
 
-    fetch('/api/product/recommendedImages')
-    .then(response => response.json())
-    .then(images => {
-        recommendedImages = images;
-        recommendedImages.forEach(imageUrl => {
-            const imageName = imageUrl.substring(imageUrl.lastIndexOf('/') + 1, imageUrl.lastIndexOf('.'));
-            this.load.image(imageName, imageUrl);
-            this.textures.get(imageName).setFilter(Phaser.Textures.FilterMode.NEAREST);
-
-            // Fotoğrafları oranlarını koruyarak ölçeklendir
-            let texture = this.textures.get(imageName);
-            let originalWidth = texture.getSourceImage().width;
-            let originalHeight = texture.getSourceImage().height;
-
-            if (originalWidth > 40 || originalHeight > 40) {
-                let scale = Math.min(40 / originalWidth, 40 / originalHeight);
-                texture.setSize(originalWidth * scale, originalHeight * scale);
-            }
-
-            // Fotoğrafları yatay ve dikey olarak ortala
-            texture.setOrigin(0.5, 0.5);
-        });
-    });
-    this.load.image('coin', '/api/product/recommendedImages');
-
+    recommendedImages.forEach(imageUrl => {
+        const imageName = imageUrl.substring(imageUrl.lastIndexOf('/') + 1, imageUrl.lastIndexOf('.'));
+        this.load.image(imageName, imageUrl);
+      });
 }
 
 function create() {
@@ -143,8 +127,8 @@ function create() {
     }
 
     //karakter oluşturma
-    player = this.physics.add.sprite(config.width / 2, 800, 'player');//Y = config.height - 200
-    player.setScale(0.30);
+    player = this.physics.add.sprite(config.width / 2, config.height - 500, 'player');//Y = config.height - 500
+    player.setScale(0.35);
     player.setCollideWorldBounds(false);
     player.setVelocityY(-100)
 
@@ -160,7 +144,7 @@ function create() {
 
     //kamera takip
     this.cameras.main.startFollow(player, false, 0, 1);
-    this.cameras.main.setFollowOffset(0, -config.height / 4);
+    this.cameras.main.setFollowOffset(0, -config.height * 2 / 10);
 
 
     cursors = this.input.keyboard.createCursorKeys();
@@ -345,11 +329,13 @@ function create() {
 
 function update() {
 
+    let cameraTopY = this.cameras.main.scrollY;
+    let cameraBottomY = cameraTopY + config.height;
+
     handlePlayerMovement();
     adjustCameraDeadzone.call(this);
 
     function adjustCameraDeadzone() {
-
         if (player.body.velocity.y < 0) {
             //kamera takip noktası ayarlama
             this.cameras.main.setFollowOffset(0, config.height * 2 / 10);
@@ -392,7 +378,6 @@ function update() {
         lastY = this.cameras.main.scrollY;
     }
 
-    let cameraBottomY = this.cameras.main.scrollY + config.height;
     if (player.y > cameraBottomY + 500) {
 
         normalPlatforms.children.each(function (platform) {
@@ -430,179 +415,24 @@ function update() {
     // bird
 
     if (gameActive) {
-        if (!inSpaceStage && player.y < cloudSpawnThreshold && Phaser.Math.Between(1, 130) === 1) {
-            let x = Phaser.Math.Between(100, config.width - 100);
-            let y = player.y - 900;
-
-            let canSpawnBird = true;
-            enemies.children.entries.forEach((enemy) => {
-                if (enemy.texture.key === 'bird' &&
-                    Math.abs(enemy.x - x) < 300 &&
-                    Math.abs(enemy.y - y) < 300) {
-                    canSpawnBird = false;
-                }
-            });
-
-            if (canSpawnBird) {
-                let bird = enemies.create(x, y, 'bird');
-                bird.setScale(1.2);
-
-                bird.body.setGravity(0, 0);
-                bird.body.velocity.y = 0;
-                bird.body.allowGravity = false;
-                bird.body.moves = false;
-                bird.setImmovable(true);
-
-                enemies.add(bird);
-
-                let movementDistance = Phaser.Math.Between(100, 200);
-                let movingRight = movementDistance > 0;
-
-                bird.setFlipX(!movingRight);
-
-                this.tweens.add({
-                    targets: bird,
-                    x: x + movementDistance,
-                    scaleY: bird.scaleY * 0.85,
-                    y: bird.y - 20,
-                    duration: 2000,
-                    yoyo: true,
-                    repeat: -1,
-                    onYoyo: () => {
-                        bird.setFlipX(true);
-                    },
-                    repeat: -1,
-                    onRepeat: () => {
-                        bird.setFlipX(false);
-                    }
-                });
-            }
+        if (gameActive && !inSpaceStage && player.y < cloudSpawnThreshold && Phaser.Math.Between(1, 130) === 1) {
+            spawnBird(this);
         }
     }
 
 
 
     // alien
-    if (gameActive && inSpaceStage && player.y - config.height > victoryY) {
+    if (gameActive && inSpaceStage && player.y - config.height > victoryY ) {
         if (Phaser.Math.Between(1, 200) === 1) {
-            let x = Phaser.Math.Between(100, config.width - 100);
-            let y = player.y - 900;
-
-
-            let canSpawnAlien = true;
-            enemies.children.entries.forEach((enemy) => {
-
-                if (Math.abs(enemy.x - x) < 400 && Math.abs(enemy.y - y) < 400) {
-                    canSpawnAlien = false;
-                }
-            });
-
-            if (canSpawnAlien) {
-                let alien = enemies.create(x, y, 'alien');
-                alien.setScale(0.9);
-
-                alien.body.setGravity(0, 0);
-                alien.body.velocity.y = 0;
-                alien.body.allowGravity = false;
-                alien.body.moves = false;
-                alien.setImmovable(true);
-
-                this.tweens.add({
-                    targets: alien,
-                    y: y - 10,
-                    angle: Phaser.Math.Between(-5, 5),
-                    alpha: 0.85,
-                    duration: 1500,
-                    yoyo: true,
-                    repeat: -1,
-                    ease: 'Sine.easeInOut'
-                });
-
-                alien.setTint(0xccffcc);
-
-                this.time.addEvent({
-                    delay: 2000,
-                    callback: () => {
-                        if (gameActive && alien.active) {
-                            let distanceToPlayer = Phaser.Math.Distance.Between(
-                                alien.x, alien.y,
-                                player.x, player.y
-                            );
-
-                            if (distanceToPlayer < 800) {
-                                let bullet = alienBullets.create(alien.x, alien.y, 'bullet');
-                                bullet.setScale(1.0);
-                                bullet.setDataEnabled();
-                                bullet.data.set('created', Date.now());
-                                let angle = Phaser.Math.Angle.Between(
-                                    alien.x, alien.y,
-                                    player.x, player.y
-                                );
-
-                                const bulletSpeed = 300;
-                                bullet.body.velocity.x = Math.cos(angle) * bulletSpeed;
-                                bullet.body.velocity.y = Math.sin(angle) * bulletSpeed;
-                                bullet.setAngle(Phaser.Math.RadToDeg(angle) - 90);
-
-
-                            }
-                        }
-
-                    },
-                    loop: true
-                });
-            }
+            spawnAlien(this);
         }
     }
 
     // ufo
     if (gameActive && player.y - config.height > victoryY) {
         if (inSpaceStage && Phaser.Math.Between(1, 250) === 1) {
-            let x = Phaser.Math.Between(100, config.width - 100);
-            let y = player.y - 900;
-
-
-            let canSpawnUFO = true;
-            enemies.children.entries.forEach((enemy) => {
-
-                if (Math.abs(enemy.x - x) < 400 && Math.abs(enemy.y - y) < 400) {
-                    canSpawnUFO = false;
-                }
-            });
-
-            if (canSpawnUFO) {
-                let ufo = enemies.create(x, y, 'ufo');
-                ufo.setScale(1.3);
-
-                ufo.body.setSize(
-                    ufo.width * 0.5,
-                    ufo.height * 0.3
-                );
-
-
-                ufo.body.setOffset(
-                    ufo.width * 0.25,
-                    ufo.height * 0.35
-                );
-
-                ufo.body.setGravity(0, 0);
-                ufo.body.velocity.y = 0;
-                ufo.body.allowGravity = false;
-                ufo.body.moves = false;
-                ufo.setImmovable(true);
-
-                this.tweens.add({
-                    targets: ufo,
-                    x: x + Phaser.Math.Between(-80, 80),
-                    y: y - 10,
-                    angle: 10,
-                    alpha: 0.65,
-                    duration: 2000,
-                    yoyo: true,
-                    repeat: -1,
-                    ease: 'Sine.easeInOut'
-                });
-            }
+            spawnUFO(this);
         }
     }
 
@@ -721,61 +551,80 @@ function collectCoin(player, coin) {
 }
 
 function addCoin(scene) {
+    if (!recommendedImages || recommendedImages.length === 0) return;
+
     let x = Phaser.Math.Between(0, config.width);
     let y = Phaser.Math.Between(lastPlatformY - platformGap - 100, lastPlatformY - platformGap + 100);
 
-    let coinTexture = 'coin'; // Varsayılan doku
-    if (recommendedImages.length > 0) {
-        // Önerilen ürünlerden rastgele birini seç
-        const randomImage = recommendedImages[Math.floor(Math.random() * recommendedImages.length)];
-        coinTexture = randomImage.substring(randomImage.lastIndexOf('/') + 1, randomImage.lastIndexOf('.'));
-    }
+    let imageUrl = Phaser.Utils.Array.GetRandom(recommendedImages);
+    let imageName = imageUrl.substring(imageUrl.lastIndexOf('/') + 1, imageUrl.lastIndexOf('.'));
 
-    let coin = coins.create(x, y, coinTexture);
-    coin.setDisplaySize(40, 40);
+    //  50x50 container 
+    let coin = scene.add.container(x, y);
+    let image = scene.add.image(0, 0, imageName);
 
+    // orantılı şekilde 50x50 kutuya sığdırma
+    const maxSize = 60;
+    const texture = scene.textures.get(imageName).getSourceImage();
+    const scale = Math.min(maxSize / texture.width, maxSize / texture.height);
+    image.setScale(scale);
 
+    coin.add(image);
+
+    //  50x50’lik hitbox 
+    scene.physics.world.enable(coin);
+    coin.body.setSize(60, 60);
+    coin.body.setOffset(-30, -30); // i
+    coin.body.setAllowGravity(false);
+    coin.body.setImmovable(true);
+
+    coins.add(coin); 
+
+    // 4. Çakışma kontrolü
     let attempts = 0;
-    let isOverlapping = true;
+    let isOverlapping;
 
-    while (isOverlapping && attempts < 10) {
+    do {
         isOverlapping = false;
 
-        coins.children.each(function (existingCoin) {
-            if (coin !== existingCoin && Phaser.Geom.Intersects.RectangleToRectangle(coin.getBounds(), existingCoin.getBounds())) {
+        coins.children.each(existing => {
+            if (coin !== existing && Phaser.Geom.Intersects.RectangleToRectangle(coin.getBounds(), existing.getBounds())) {
                 isOverlapping = true;
             }
         });
 
-        normalPlatforms.children.each(function (platform) {
+        normalPlatforms.children.each(platform => {
             if (Phaser.Geom.Intersects.RectangleToRectangle(coin.getBounds(), platform.getBounds())) {
                 isOverlapping = true;
             }
         });
 
-        movingPlatforms.children.each(function (platform) {
+        movingPlatforms.children.each(platform => {
             if (Phaser.Geom.Intersects.RectangleToRectangle(coin.getBounds(), platform.getBounds())) {
                 isOverlapping = true;
             }
         });
 
-        breakingPlatforms.children.each(function (platform) {
+        breakingPlatforms.children.each(platform => {
             if (Phaser.Geom.Intersects.RectangleToRectangle(coin.getBounds(), platform.getBounds())) {
                 isOverlapping = true;
             }
         });
-
 
         if (isOverlapping) {
-            coin.setPosition(Phaser.Math.Between(0, config.width), Phaser.Math.Between(lastPlatformY - platformGap - 100, lastPlatformY - platformGap + 100));
+            coin.setPosition(
+                Phaser.Math.Between(0, config.width),
+                Phaser.Math.Between(lastPlatformY - platformGap - 100, lastPlatformY - platformGap + 100)
+            );
             attempts++;
         }
-    }
 
-    if (isOverlapping) {
-        coin.destroy();
-    }
+    } while (isOverlapping && attempts < 10);
+
+    if (isOverlapping) coin.destroy();
 }
+
+//normal platform
 function addNormalPlatform(scene) {
     let x = Phaser.Math.Between(0, config.width);
     let y = lastPlatformY - platformGap;
@@ -947,11 +796,175 @@ function handlePlatformCollision(player, platform, jumpPower) {
     }
 }
 
+//kuş düşman
+function spawnBird(scene) {
+    let x = Phaser.Math.Between(100, config.width - 100);
+    let y = player.y - 900;
+    let canSpawnBird = true;
 
+    enemies.children.entries.forEach((enemy) => {
+        if (enemy.texture.key === 'bird' &&
+            Math.abs(enemy.x - x) < 300 &&
+            Math.abs(enemy.y - y) < 300) {
+            canSpawnBird = false;
+        }
+    });
+
+    if (!canSpawnBird) return;
+
+    let bird = enemies.create(x, y, 'bird');
+    bird.setScale(1.2);
+    bird.body.setGravity(0, 0);
+    bird.body.velocity.y = 0;
+    bird.body.allowGravity = false;
+    bird.body.moves = false;
+    bird.setImmovable(true);
+
+    let movementDistance = Phaser.Math.Between(100, 200);
+    let movingRight = movementDistance > 0;
+
+    bird.setFlipX(!movingRight);
+
+    scene.tweens.add({
+        targets: bird,
+        x: x + movementDistance,
+        scaleY: bird.scaleY * 0.85,
+        y: bird.y - 20,
+        duration: 2000,
+        yoyo: true,
+        repeat: -1,
+        onYoyo: () => {
+            bird.setFlipX(true);
+        },
+        onRepeat: () => {
+            bird.setFlipX(false);
+        }
+    });
+}
+
+//Alien düşman
+function spawnAlien(scene) {
+    let x = Phaser.Math.Between(100, config.width - 100);
+    let y = player.y - 900;
+
+
+    let canSpawnAlien = true;
+    enemies.children.entries.forEach((enemy) => {
+
+        if (Math.abs(enemy.x - x) < 400 && Math.abs(enemy.y - y) < 400) {
+            canSpawnAlien = false;
+        }
+    });
+
+    if (canSpawnAlien) {
+        let alien = enemies.create(x, y, 'alien');
+        alien.setScale(0.9);
+
+        alien.body.setGravity(0, 0);
+        alien.body.velocity.y = 0;
+        alien.body.allowGravity = false;
+        alien.body.moves = false;
+        alien.setImmovable(true);
+
+        scene.tweens.add({
+            targets: alien,
+            y: y - 10,
+            angle: Phaser.Math.Between(-5, 5),
+            alpha: 0.85,
+            duration: 1500,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut'
+        });
+
+        alien.setTint(0xccffcc);
+
+        scene.time.addEvent({
+            delay: 2000,
+            callback: () => {
+                if (gameActive && alien.active) {
+                    let distanceToPlayer = Phaser.Math.Distance.Between(
+                        alien.x, alien.y,
+                        player.x, player.y
+                    );
+
+                    if (distanceToPlayer < 800) {
+                        let bullet = alienBullets.create(alien.x, alien.y, 'bullet');
+                        bullet.setScale(1.0);
+                        bullet.setDataEnabled();
+                        bullet.data.set('created', Date.now());
+                        let angle = Phaser.Math.Angle.Between(
+                            alien.x, alien.y,
+                            player.x, player.y
+                        );
+
+                        const bulletSpeed = 300;
+                        bullet.body.velocity.x = Math.cos(angle) * bulletSpeed;
+                        bullet.body.velocity.y = Math.sin(angle) * bulletSpeed;
+                        bullet.setAngle(Phaser.Math.RadToDeg(angle) - 90);
+
+
+                    }
+                }
+
+            },
+            loop: true
+        });
+    }
+}
+
+//ufo düşmanı
+function spawnUFO(scene) {
+    let x = Phaser.Math.Between(100, config.width - 100);
+    let y = player.y - 900;
+
+
+    let canSpawnUFO = true;
+    enemies.children.entries.forEach((enemy) => {
+
+        if (Math.abs(enemy.x - x) < 400 && Math.abs(enemy.y - y) < 400) {
+            canSpawnUFO = false;
+        }
+    });
+
+    if (canSpawnUFO) {
+        let ufo = enemies.create(x, y, 'ufo');
+        ufo.setScale(1.3);
+
+        ufo.body.setSize(
+            ufo.width * 0.5,
+            ufo.height * 0.3
+        );
+
+
+        ufo.body.setOffset(
+            ufo.width * 0.25,
+            ufo.height * 0.35
+        );
+
+        ufo.body.setGravity(0, 0);
+        ufo.body.velocity.y = 0;
+        ufo.body.allowGravity = false;
+        ufo.body.moves = false;
+        ufo.setImmovable(true);
+
+        scene.tweens.add({
+            targets: ufo,
+            x: x + Phaser.Math.Between(-80, 80),
+            y: y - 10,
+            angle: 10,
+            alpha: 0.65,
+            duration: 2000,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut'
+        });
+    }
+}
 
 function handleEnemyCollision(player, enemy) {
 
-    enemy.destroy();
+    //    enemy.destroy();
     this.physics.pause();
     gameActive = false;
     showGameOver(this);
@@ -1258,7 +1271,7 @@ function cleanupBullets() {
 
 function createInitialGround(scene) {
 
-    let startGround = ground.create(config.width / 2, config.height, 'ground');
+    let startGround = ground.create(config.width / 2, config.height - 250, 'ground');
     startGround.setScale(5);
 
     startGround.body.checkCollision.up = true;

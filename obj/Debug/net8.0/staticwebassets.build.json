@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "+rG+RT8wY4CNM88+z3Fkq0IEe/0b7lZBqiZB3NC1xmM=",
+  "Hash": "4MiVAScp4niRa16T0dwg7wu4bzbLFRGUTD8r6QeFW7k=",
   "Source": "ECommerceGameSite",
   "BasePath": "_content/ECommerceGameSite",
   "Mode": "Default",
@@ -623,6 +623,25 @@
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot\\images\\redbull.jpg"
+    },
+    {
+      "Identity": "C:\\Users\\okano\\ECommerceGameSite\\wwwroot\\images\\Terlik.png",
+      "SourceId": "ECommerceGameSite",
+      "SourceType": "Discovered",
+      "ContentRoot": "C:\\Users\\okano\\ECommerceGameSite\\wwwroot\\",
+      "BasePath": "_content/ECommerceGameSite",
+      "RelativePath": "images/Terlik.png",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\images\\Terlik.png"
     },
     {
       "Identity": "C:\\Users\\okano\\ECommerceGameSite\\wwwroot\\js\\site.js",

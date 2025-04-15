@@ -5,7 +5,7 @@
     @foreach (var product in Model)
     {
         <div class="product-item">
-            <img src="@product.ImageUrl" alt="@product.Name" width="150" />
+            <img src="@product.ImageUrl" alt="@product.Name" class="product-image" />
             <h3>@product.Name</h3>
             
             @if (product.IsRecommended)
@@ -29,6 +29,12 @@
         padding: 10px;
         text-align: center;
         position: relative;
+    }
+    .product-image {
+    width: 150px;
+    height: 150px;
+     object-fit: contain;
+    border-radius: 8px;
     }
     .badge {
         position: absolute;
