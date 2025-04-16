@@ -1,36 +1,37 @@
-
-    const config = {
-      type: Phaser.AUTO,
-      width: 560,
-      height: 1050,
-      scale: {
-        mode: Phaser.Scale.FIT,
-        autoCenter: Phaser.Scale.CENTER_BOTH,
-      },
-      physics: {
+const config = {
+    type: Phaser.AUTO,
+    width: 560,
+    height: 1050,
+    scale: {
+        mode: Phaser.Scale.FIT,       // Ekrana sığdır
+        autoCenter: Phaser.Scale.CENTER_BOTH, // Ortala
+        width: 560,
+        height: 1050
+    },
+    physics: {
         default: 'arcade',
         arcade: {
-          gravity: { y: 1000 },
-          debug: false
+            gravity: { y: 1000 },
+            debug: false
         }
-      },
-      scene: {
+    },
+    scene: {
         preload: preload,
         create: create,
         update: update
-      }
-    };
-    let recommendedImages = [];
+    }
+};
 
-    // İlk önce coin görsellerini al
-    fetch('/api/product/recommendedImages')
-      .then(res => res.json())
-      .then(images => {
-        recommendedImages = images;
-    
-    new Phaser.Game(config);
-  });
+let recommendedImages = [];
 
+// İlk önce coin görsellerini al
+fetch('/api/product/recommendedImages')
+  .then(res => res.json())
+  .then(images => {
+    recommendedImages = images;
+
+new Phaser.Game(config);
+});
 
 const DEBUG_COLLISIONS = false;
 let cursors;
@@ -40,10 +41,10 @@ let breakingPlatforms;
 // let phantomPlatforms;
 let player;
 let ground;
-let lastPlatformY = 700;
+let lastPlatformY = 500;
 let platformGap = 150;
 let lastY = 0;
-let jumpPower = 820;
+let jumpPower = 810;
 let gameOverText;
 let lastPlatformType = "normal";
 let coins;
@@ -59,10 +60,17 @@ let healthText;
 let enemies;
 let cloudSpawnThreshold = -(10000 * 0.01);
 let gameOverScreen;
-let victoryY = spaceThreshold - 8000;
+let victoryY = spaceThreshold - 8800;
 let victoryScreen;
 let victoryAchieved = false;
 let trophy;
+let maxFallDistance = config.height * 0.8; 
+let highestPlayerY = 0;
+let startScreenActive = true;
+let startScreenElements = [];
+let gameOverSoundPlayed = false;
+let canPlayDamageSound = true;
+let backgroundMusic;
 
 
 function preload() {
@@ -71,18 +79,16 @@ function preload() {
     this.load.image('platformSpace', 'assets/platformSpace.png');
     this.load.image('movingPlatform', 'assets/movingPlatform.png');
     this.load.image('breakingPlatform', 'assets/breakingPlatform.png');
-
     this.load.image('player', 'assets/player.png');
-
+    //this.load.image('coin', 'assets/coin.png');
     this.load.image('ground', 'assets/ground.png');
     this.load.image('bird', 'assets/bird.png');
     this.load.image('ufo', 'assets/ufo.png');
     this.load.image('alien', 'assets/alien.png');
     this.load.image('bullet', 'assets/bullet.png');
-
     this.load.image('trophy', 'assets/trophy.png');
 
-    
+
     this.load.image('scorePanel', 'assets/ui/score_panel.png');
     this.load.image('healthBar', 'assets/ui/health_bar.png');
     this.load.image('healthPoint', 'assets/ui/health_point.png');
@@ -96,14 +102,31 @@ function preload() {
     this.load.image('restartButton', 'assets/ui/restart_button.png');
     this.load.image('restartButtonSpace', 'assets/ui/restart_button_space.png');
     this.load.image('victoryTextSpace', 'assets/ui/victory_text_space.png');
+    this.load.image('startButton', 'assets/ui/start_button.png');
 
-    recommendedImages.forEach(imageUrl => {
-        const imageName = imageUrl.substring(imageUrl.lastIndexOf('/') + 1, imageUrl.lastIndexOf('.'));
-        this.load.image(imageName, imageUrl);
-      });
+    //Sesler
+    this.load.audio('jump', 'assets/sounds/jump.mp3');
+    this.load.audio('gameOverSound', 'assets/sounds/gameover.mp3');
+    this.load.audio('bulletFire', 'assets/sounds/bullet.mp3');
+    this.load.audio('coinSound', 'assets/sounds/coin.mp3');
+    this.load.audio('damageSound', 'assets/sounds/damage.mp3');
+    this.load.audio('backgroundMusic', 'assets/sounds/backgroundMusic.mp3');
+    this.load.audio('buttonClick', 'assets/sounds/buttonClick.mp3');
+    this.load.audio('victorySound', 'assets/sounds/win.mp3');
+
+    this.load.audio('alienSound', 'assets/sounds/alien.mp3');
+    this.load.audio('ufoSound', 'assets/sounds/ufo.mp3');
+    this.load.audio('birdSound', 'assets/sounds/bird.mp3');
+    
+  recommendedImages.forEach(imageUrl => {
+    const imageName = imageUrl.substring(imageUrl.lastIndexOf('/') + 1, imageUrl.lastIndexOf('.'));
+    this.load.image(imageName, imageUrl);
+  });
 }
 
 function create() {
+    gameActive = false;
+    this.physics.pause();
     //dünya sınırları
     this.physics.world.setBounds(0, 0, config.width, Number.MAX_SAFE_INTEGER);
     coins = this.physics.add.group({ allowGravity: false, immovable: true });
@@ -113,12 +136,30 @@ function create() {
     background.setOrigin(0.5, 1);
     background.displayWidth = config.width;
     background.setScrollFactor(0.9);
-
+    let groundColor = 0x3D2314; 
+    let groundBelowTrampoline = this.add.rectangle(
+    config.width / 2,            
+    config.height,              
+    config.width,               
+    500,                        
+    groundColor                  
+    );
+    groundBelowTrampoline.setOrigin(0.5, 0);  
+    groundBelowTrampoline.setScrollFactor(0.9); 
+    groundBelowTrampoline.setDepth(-1);     
+    
+    if (!backgroundMusic) {
+        backgroundMusic = this.sound.add('backgroundMusic', { loop: true, volume: 0.5 });
+        backgroundMusic.play();
+    } else {
+        if (!backgroundMusic.isPlaying) {
+            backgroundMusic.play();
+        }
+    }
 
     normalPlatforms = this.physics.add.staticGroup();
     movingPlatforms = this.physics.add.group();
     breakingPlatforms = this.physics.add.group();
-    //  phantomPlatforms = this.physics.add.group();
 
     //debug
     enemies = this.physics.add.group();
@@ -127,13 +168,14 @@ function create() {
     }
 
     //karakter oluşturma
-    player = this.physics.add.sprite(config.width / 2, config.height - 500, 'player');//Y = config.height - 500
+    player = this.physics.add.sprite(config.width / 2, config.height - 400, 'player');
     player.setScale(0.35);
     player.setCollideWorldBounds(false);
     player.setVelocityY(-100)
 
     player.body.setSize(player.width, player.height);
     player.body.setOffset(0, 0);
+    player.setAngle(0);
 
     //başlangıç zemini oluşturma
     ground = this.physics.add.staticGroup();
@@ -143,7 +185,7 @@ function create() {
     player.body.world.bounds.top = -Number.MAX_SAFE_INTEGER;
 
     //kamera takip
-    this.cameras.main.startFollow(player, false, 0, 1);
+    this.cameras.main.startFollow(player, false, 0, 0.05);
     this.cameras.main.setFollowOffset(0, -config.height * 2 / 10);
 
 
@@ -179,8 +221,8 @@ function create() {
         if (player.body.velocity.y >= 0 && playerBottom <= platformTop + 10) {
 
             handlePlatformCollision(player, platform, jumpPower);
-
-
+            animatePlayerLanding(this, player);
+            this.sound.play('jump');
             this.tweens.add({
                 targets: platform,
                 y: platform.y + 15,
@@ -219,8 +261,9 @@ function create() {
         if (player.body.velocity.y >= 0 && playerBottom <= platformTop + 10) {
 
             handlePlatformCollision(player, platform, jumpPower);
-
-
+            animatePlayerLanding(this, player);
+            this.sound.play('jump');
+            
             this.tweens.add({
                 targets: platform,
                 y: platform.y + 15,
@@ -258,8 +301,8 @@ function create() {
 
         if (player.body.velocity.y >= 0 && playerBottom <= platformTop + 5) {
             handlePlatformCollision(player, platform, jumpPower);
-
-
+            animatePlayerLanding(this, player);
+            this.sound.play('jump');
             this.tweens.add({
                 targets: platform,
                 alpha: 0,
@@ -324,31 +367,51 @@ function create() {
 
     this.physics.add.overlap(player, alienBullets, handleBulletCollision, null, this);
 
+    if (startScreenActive) {
+        createStartScreen(this); // İlk açılışta çalışır
+    } else {
+        // Restart sonrası otomatik başlat: trambolinden zıplayarak
+        gameActive = true;
+        player.setVisible(true);
+        player.setVelocityY(-jumpPower - 200); // Güçlü zıplatma (trambolin etkisi)
+        this.physics.resume(); // Fizikleri devam ettir
 
+        // UI elemanlarını görünür yap
+        if (scoreText) scoreText.setVisible(true);
+        if (healthPoints) {
+            healthPoints.children.each(function (point) {
+                point.setVisible(true);
+            });
+        }
+
+        this.children.list.forEach(child => {
+            if (child.texture &&
+                (child.texture.key === 'scorePanel' ||
+                 child.texture.key === 'healthBar')) {
+                child.setVisible(true);
+            }
+        });
+    }
 }
 
 function update() {
-
+    if (startScreenActive) return;
+    if (gameActive && this.physics.world.isPaused) {
+        this.physics.resume();
+    }
     let cameraTopY = this.cameras.main.scrollY;
     let cameraBottomY = cameraTopY + config.height;
-
+    
     handlePlayerMovement();
     adjustCameraDeadzone.call(this);
-
-    function adjustCameraDeadzone() {
-        if (player.body.velocity.y < 0) {
-            //kamera takip noktası ayarlama
-            this.cameras.main.setFollowOffset(0, config.height * 2 / 10);
-        }
-    }
-
+    
     inSpaceStage = checkSpaceStage(player.y);
-    //    checkVictoryCondition.call(this);
-
+    
+    // Platform generation
     const cameraTop = this.cameras.main.scrollY;
     const visibleHeight = this.cameras.main.height;
     const generationThreshold = cameraTop - visibleHeight * 0.5;
-
+    
     if (lastPlatformY > generationThreshold && cameraTop - 200 < lastPlatformY && player.y - config.height - 200 > victoryY) {
         let platformType = Phaser.Math.Between(1, 10);
         if (platformType <= 6) {
@@ -361,56 +424,106 @@ function update() {
             addBreakingPlatform(this);
             lastPlatformType = "breaking";
         }
-
+        
         if (Phaser.Math.Between(1, 10) <= 2) {
             addCoin(this);
         }
     }
-
-    if (player.y < this.cameras.main.scrollY + jumpPower * 9 / 10 && player.body.velocity.y < 0) {
-        this.cameras.main.scrollY = player.y - jumpPower * 9 / 10;
-
+    
+    // Camera follow logic for jumping and falling
+    if (player.body.velocity.y < 0) {
+        // Player is jumping upward
+        const targetY = player.y - jumpPower * 9 / 10;
+        this.cameras.main.scrollY = Phaser.Math.Linear(
+            this.cameras.main.scrollY,
+            targetY,
+            0.05
+        );
+        
+        // Update the highest camera position
+        if (this.cameras.main.scrollY < lastY) {
+            lastY = this.cameras.main.scrollY;
+        }
+    } else if (player.body.velocity.y > 0) {
+        // Player is falling - allow some downward camera movement
+        // Calculate how far down the camera can go (30% of screen height)
+        const maxDownwardOffset = config.height * 0.3;
+        const lowestAllowedY = lastY - maxDownwardOffset;
+        
+        // Calculate target position - keep player in upper part of screen
+        const targetY = Math.max(
+            lowestAllowedY,
+            player.y - config.height * 0.7
+        );
+        
+        // Smoothly move camera to the target position
+        this.cameras.main.scrollY = Phaser.Math.Linear(
+            this.cameras.main.scrollY,
+            targetY,
+            0.03
+        );
     }
-
-    if (this.cameras.main.scrollY > lastY) {
-        this.cameras.main.scrollY = lastY;
-    } else {
-        lastY = this.cameras.main.scrollY;
+    
+    // Fall detection - unified and reliable
+    if (gameActive) {
+        // Track highest point reached (only when not touching platforms)
+        if (player.y < highestPlayerY || highestPlayerY === 0) {
+            highestPlayerY = player.y;
+        }
+        
+        // Reset highest point when player is on a platform
+        if (player.body.touching.down) {
+            // When player lands on any platform, reset the highest point
+            highestPlayerY = player.y;
+        }
+        
+        // Get current fall distance
+        const currentFallDistance = player.y - highestPlayerY;
+        
+        // Check if player has fallen too far from highest point
+        // Only trigger game over when player is actually falling (positive y velocity) 
+        // and has exceeded the maximum fall distance
+        if (currentFallDistance > maxFallDistance && player.body.velocity.y > 0) {
+            // Trigger game over
+            gameActive = false;
+            this.physics.pause();
+            
+            this.tweens.add({
+                targets: player,
+                angle: 180,
+                alpha: 0.7,
+                duration: 300,
+                onComplete: () => {
+                    showGameOver(this);
+                }
+            });
+        }
+        
+        // Check if player has fallen below the trampoline/ground
+        const trampolineY = config.height - 300;
+        if (player.y > trampolineY + 50) {
+            // Stop camera from following player down
+            this.cameras.main.stopFollow();
+            
+            // Keep camera at the ground level
+            this.cameras.main.scrollY = trampolineY - config.height/2;
+            
+            // Immediately pause physics to stop further falling
+            this.physics.pause();
+            gameActive = false;
+            
+            this.tweens.add({
+                targets: player,
+                angle: 180,
+                alpha: 0.7,
+                duration: 150,
+                onComplete: () => {
+                    showGameOver(this);
+                }
+            });
+        }
     }
-
-    if (player.y > cameraBottomY + 500) {
-
-        normalPlatforms.children.each(function (platform) {
-            if (platform.y > cameraBottomY - 50) {
-                platform.setVisible(false);
-            }
-        });
-
-        movingPlatforms.children.each(function (platform) {
-            if (platform.y > cameraBottomY - 50) {
-                platform.setVisible(false);
-            }
-        });
-
-        breakingPlatforms.children.each(function (platform) {
-            if (platform.y > cameraBottomY - 50) {
-                platform.setVisible(false);
-            }
-        });
-
-        // Play a falling animation
-        this.tweens.add({
-            targets: player,
-            angle: 180,
-            alpha: 0.7,
-            duration: 500,
-            onComplete: () => {
-                this.physics.pause();
-                gameActive = false;
-                showGameOver(this);
-            }
-        });
-    }
+    
 
     // bird
 
@@ -419,7 +532,6 @@ function update() {
             spawnBird(this);
         }
     }
-
 
 
     // alien
@@ -439,6 +551,17 @@ function update() {
 
 }
 
+function adjustCameraDeadzone() {
+    if (player.body.velocity.y < 0) {
+        const currentOffset = this.cameras.main.followOffset.y;
+        const targetOffset = config.height * 2 / 10;
+        
+        this.cameras.main.setFollowOffset(
+            0,
+            Phaser.Math.Linear(currentOffset, targetOffset, 0.03)
+        );
+    }
+}
 
 function checkSpaceStage(playerY) {
     if (playerY < spaceThreshold && !inSpaceStage) {
@@ -547,70 +670,72 @@ function collectCoin(player, coin) {
     score += 10;
     scoreText.setText(score.toString());
 
+    this.sound.play('coinSound');
+
     console.log('Coin collected! Score: ' + score);
 }
 
 function addCoin(scene) {
     if (!recommendedImages || recommendedImages.length === 0) return;
-
+  
     let x = Phaser.Math.Between(0, config.width);
     let y = Phaser.Math.Between(lastPlatformY - platformGap - 100, lastPlatformY - platformGap + 100);
-
+  
     let imageUrl = Phaser.Utils.Array.GetRandom(recommendedImages);
     let imageName = imageUrl.substring(imageUrl.lastIndexOf('/') + 1, imageUrl.lastIndexOf('.'));
-
+  
     //  50x50 container 
     let coin = scene.add.container(x, y);
     let image = scene.add.image(0, 0, imageName);
-
+  
     // orantılı şekilde 50x50 kutuya sığdırma
     const maxSize = 60;
     const texture = scene.textures.get(imageName).getSourceImage();
     const scale = Math.min(maxSize / texture.width, maxSize / texture.height);
     image.setScale(scale);
-
+  
     coin.add(image);
-
+  
     //  50x50’lik hitbox 
     scene.physics.world.enable(coin);
     coin.body.setSize(60, 60);
     coin.body.setOffset(-30, -30); // i
     coin.body.setAllowGravity(false);
     coin.body.setImmovable(true);
-
+  
     coins.add(coin); 
-
+  
     // 4. Çakışma kontrolü
     let attempts = 0;
     let isOverlapping;
-
+  
     do {
         isOverlapping = false;
-
+  
         coins.children.each(existing => {
             if (coin !== existing && Phaser.Geom.Intersects.RectangleToRectangle(coin.getBounds(), existing.getBounds())) {
                 isOverlapping = true;
             }
         });
-
+  
         normalPlatforms.children.each(platform => {
             if (Phaser.Geom.Intersects.RectangleToRectangle(coin.getBounds(), platform.getBounds())) {
                 isOverlapping = true;
             }
         });
-
+  
         movingPlatforms.children.each(platform => {
             if (Phaser.Geom.Intersects.RectangleToRectangle(coin.getBounds(), platform.getBounds())) {
                 isOverlapping = true;
             }
         });
-
+  
         breakingPlatforms.children.each(platform => {
             if (Phaser.Geom.Intersects.RectangleToRectangle(coin.getBounds(), platform.getBounds())) {
                 isOverlapping = true;
             }
         });
-
+  
         if (isOverlapping) {
             coin.setPosition(
                 Phaser.Math.Between(0, config.width),
@@ -618,11 +743,11 @@ function addCoin(scene) {
             );
             attempts++;
         }
-
+  
     } while (isOverlapping && attempts < 10);
-
+  
     if (isOverlapping) coin.destroy();
-}
+  }
 
 //normal platform
 function addNormalPlatform(scene) {
@@ -820,6 +945,8 @@ function spawnBird(scene) {
     bird.body.moves = false;
     bird.setImmovable(true);
 
+    scene.sound.play('birdSound');
+
     let movementDistance = Phaser.Math.Between(100, 200);
     let movingRight = movementDistance > 0;
 
@@ -866,6 +993,8 @@ function spawnAlien(scene) {
         alien.body.moves = false;
         alien.setImmovable(true);
 
+        scene.sound.play('alienSound');
+
         scene.tweens.add({
             targets: alien,
             y: y - 10,
@@ -902,6 +1031,7 @@ function spawnAlien(scene) {
                         bullet.body.velocity.x = Math.cos(angle) * bulletSpeed;
                         bullet.body.velocity.y = Math.sin(angle) * bulletSpeed;
                         bullet.setAngle(Phaser.Math.RadToDeg(angle) - 90);
+                        scene.sound.play('bulletFire');
 
 
                     }
@@ -948,6 +1078,8 @@ function spawnUFO(scene) {
         ufo.body.moves = false;
         ufo.setImmovable(true);
 
+        scene.sound.play('ufoSound');
+
         scene.tweens.add({
             targets: ufo,
             x: x + Phaser.Math.Between(-80, 80),
@@ -973,6 +1105,17 @@ function handleEnemyCollision(player, enemy) {
 function handleBulletCollision(player, bullet) {
 
     bullet.destroy();
+
+    if (canPlayDamageSound) {
+        this.sound.play('damageSound');
+        canPlayDamageSound = false;
+
+        // Örneğin 300ms sonra yeniden ses çalabilsin.
+        this.time.delayedCall(300, () => {
+            canPlayDamageSound = true;
+        });
+    }
+
     playerHealth--;
 
     let lastHealthPoint = healthPoints.getChildren()[healthPoints.getChildren().length - 1];
@@ -1003,6 +1146,9 @@ function handleBulletCollision(player, bullet) {
 }
 
 function showGameOver(scene) {
+
+    if (gameOverSoundPlayed) return; // Eğer zaten çalıştıysa, tekrar çalışmasın
+    gameOverSoundPlayed = true;
 
     scene.physics.pause();
     scene.tweens.pauseAll();
@@ -1116,6 +1262,7 @@ function showGameOver(scene) {
     // Restart functionality
     restartButton.on('pointerup', () => {
 
+        scene.sound.play('buttonClick', { volume: 0.5 });
         score = 0;
         playerHealth = 5;
         gameActive = true;
@@ -1123,6 +1270,11 @@ function showGameOver(scene) {
         inSpaceStage = false;
         lastPlatformY = 700;
         lastY = 0;
+        highestPlayerY = 0;
+
+        startScreenActive = false;
+
+        gameOverSoundPlayed = false;
 
         normalPlatforms.clear(true, true);
         movingPlatforms.clear(true, true);
@@ -1136,14 +1288,24 @@ function showGameOver(scene) {
         finalScoreText.destroy();
         restartButton.destroy();
 
+        if (backgroundMusic && backgroundMusic.isPlaying) {
+            backgroundMusic.stop(); // veya .pause()
+            backgroundMusic.destroy(); // tekrar add edilebilmesi için
+            backgroundMusic = null;
+        }
+
         scene.scene.restart();
     });
+    scene.sound.play('gameOverSound');
 }
 
 function showVictoryScreen(scene) {
     scene.physics.pause();
     gameActive = false;
     victoryAchieved = true;
+
+    scene.sound.stopAll();
+    scene.sound.play('victorySound', { volume: 1, loop: false });
 
     player.clearTint();
 
@@ -1224,6 +1386,7 @@ function showVictoryScreen(scene) {
         inSpaceStage = false;
         lastPlatformY = 700;
         lastY = 0;
+        highestPlayerY = 0;
 
         normalPlatforms.clear(true, true);
         movingPlatforms.clear(true, true);
@@ -1271,22 +1434,91 @@ function cleanupBullets() {
 
 function createInitialGround(scene) {
 
-    let startGround = ground.create(config.width / 2, config.height - 250, 'ground');
-    startGround.setScale(5);
+    let trampolineFrame = scene.add.image(config.width / 2, config.height - 300, 'ground');
+    trampolineFrame.setScale(2);
+    trampolineFrame.setDepth(1); 
 
+    let trampolineMat = scene.add.image(config.width / 2, config.height - 300, 'ground');
+    trampolineMat.setScale(2);
+    trampolineMat.setDepth(0); 
+    
+    let graphics = scene.make.graphics();
+    graphics.fillStyle(0xffffff);
+    
+    let trampolineWidth = trampolineMat.width * trampolineMat.scaleX;
+    let trampolineHeight = trampolineMat.height * trampolineMat.scaleY;
+    
+    graphics.fillEllipse(
+        trampolineMat.x,
+        trampolineMat.y,
+        trampolineWidth * 0.6, 
+        trampolineHeight * 0.3  
+    );
+    
+    let mask = graphics.createGeometryMask();
+    trampolineMat.setMask(mask);
+    
+    let startGround = ground.create(config.width / 2, config.height - 300, 'ground');
+    startGround.setScale(2);
+    startGround.setAlpha(0); 
+    
     startGround.body.checkCollision.up = true;
     startGround.body.checkCollision.down = false;
     startGround.body.checkCollision.left = false;
     startGround.body.checkCollision.right = false;
-
+    
     startGround.body.setSize(startGround.width * 0.9, startGround.height * 0.1);
     startGround.body.setOffset(startGround.width * 0.05, 0);
-
+    
     startGround.refreshBody();
-
+    
+    startGround.trampolineMat = trampolineMat;
+    startGround.originalMatY = trampolineMat.y;
+    
     scene.physics.add.collider(player, ground, (player, platform) => {
+
         handlePlatformCollision(player, platform, jumpPower + 200);
+        
+        if (platform.trampolineMat) {
+            scene.sound.play('jump');
+            animateTrampoline(scene, platform);
+        }
     });
+}
+
+function animateTrampoline(scene, platform) {
+    if (!platform.trampolineMat) return;
+    
+    const mat = platform.trampolineMat;
+    const originalY = platform.originalMatY;
+    
+    scene.tweens.add({
+        targets: mat,
+        y: originalY + 30,
+        scaleY: mat.scaleY * 0.6, 
+        duration: 150,
+        ease: 'Quad.easeOut',
+        onComplete: () => {
+            scene.tweens.add({
+                targets: mat,
+                y: originalY - 20,
+                scaleY: mat.scaleY * 1.2,
+                duration: 200,
+                ease: 'Back.easeOut',
+                onComplete: () => {
+                    scene.tweens.add({
+                        targets: mat,
+                        y: originalY,
+                        scaleY: mat.scaleY,
+                        duration: 150,
+                        ease: 'Sine.easeInOut'
+                    });
+                }
+            });
+        }
+    });
+    
+  
 }
 
 function createUI() {
@@ -1331,4 +1563,326 @@ function createUI() {
         healthPoint.setDepth(1001);
         healthPoints.add(healthPoint);
     }
+}
+
+function animatePlayerLanding(scene, player) {
+
+    scene.tweens.add({
+        targets: player,
+        scaleX: player.scaleX * 1.01, 
+        scaleY: player.scaleY * 0.7, 
+        duration: 120,
+        ease: 'Quad.easeOut',
+        onComplete: () => {
+      
+            scene.tweens.add({
+                targets: player,
+                scaleX: player.scaleX * 0.9, 
+                scaleY: player.scaleY * 1.3,  
+                duration: 150,
+                ease: 'Back.easeOut',
+                onComplete: () => {
+                    // Return to original scale
+                    scene.tweens.add({
+                        targets: player,
+                        scaleX: 0.35,  
+                        scaleY: 0.35,  
+                        duration: 100,
+                        ease: 'Sine.easeInOut'
+                    });
+                }
+            });
+        }
+    });
+}
+
+function createStartScreen(scene) {
+    
+    let overlay = scene.add.rectangle(
+        config.width / 2,
+        config.height / 2,
+        config.width,
+        config.height,
+        0x2ABED9, 
+        0
+    );
+    overlay.setScrollFactor(0);
+    overlay.setDepth(1000);
+    startScreenElements.push(overlay);
+    
+    // Fade in the overlay
+    scene.tweens.add({
+        targets: overlay,
+        alpha: 0.75, 
+        duration: 800,
+        ease: 'Power2'
+    });
+    
+    // Add a slight gradient effect with another rectangle
+    let gradientOverlay = scene.add.rectangle(
+        config.width / 2,
+        config.height / 2,
+        config.width,
+        config.height,
+        0x0AFFFF, 
+        0
+    );
+    gradientOverlay.setScrollFactor(0);
+    gradientOverlay.setDepth(1000);
+    gradientOverlay.setAlpha(0);
+    startScreenElements.push(gradientOverlay);
+    
+    // Fade in the gradient with a different timing
+    scene.tweens.add({
+        targets: gradientOverlay,
+        alpha: 0.2,
+        duration: 1200,
+        ease: 'Sine.InOut'
+    });
+    
+    // Hide the actual player and UI elements
+    if (player) player.setVisible(false);
+    if (scoreText) scoreText.setVisible(false);
+    if (healthPoints) {
+        healthPoints.children.each(function(point) {
+            point.setVisible(false);
+        });
+    }
+    
+    // Hide UI elements
+    scene.children.list.forEach(child => {
+        if (child.texture && 
+            (child.texture.key === 'scorePanel' || 
+             child.texture.key === 'healthBar')) {
+            child.setVisible(false);
+        }
+    });
+    
+    // Title with animation
+    let title = scene.add.text(
+        config.width / 2,
+        config.height * 0.2, 
+        'OYUN ADI',
+        {
+            fontSize: '48px',
+            fontFamily: 'monospace',
+            fill: '#ffffff',
+            stroke: '#000000',
+            strokeThickness: 4
+        }
+    );
+    title.setOrigin(0.5);
+    title.setScrollFactor(0);
+    title.setDepth(1001);
+    title.setAlpha(0);  
+    startScreenElements.push(title);
+    
+    // Animate title dropping in
+    scene.tweens.add({
+        targets: title,
+        y: config.height * 0.3,  
+        alpha: 1,
+        duration: 1000,
+        ease: 'Bounce.Out',
+        delay: 300
+    });
+    
+    // Add 5 platforms that start at the bottom and move upward
+    for (let i = 0; i < 5; i++) {
+        // Spread platforms horizontally
+        let x = config.width * (0.2 + 0.15 * i);
+        // All start from below the screen
+        let y = config.height + 50 + (i * 30);
+        
+        let platform = scene.add.image(x, y, 'platform');
+        platform.setScale(120 / platform.width, 42 / platform.height);
+        platform.setScrollFactor(0);
+        platform.setDepth(1001);
+        startScreenElements.push(platform);
+        
+        // Animate platform moving up continuously
+        scene.tweens.add({
+            targets: platform,
+            y: -100, 
+            duration: 12000 + i * 1000, 
+            ease: 'Linear',
+            delay: i * 1200, // Staggered start
+            loop: -1, // Loop forever
+            onLoop: (tween, target) => {
+                // Reset position when it goes off screen
+                target.y = config.height + 50;
+                // Randomize horizontal position on each loop
+                target.x = Phaser.Math.Between(50, config.width - 50);
+            }
+        });
+        
+        // Add a slight horizontal wobble
+        scene.tweens.add({
+            targets: platform,
+            x: x + Phaser.Math.Between(-30, 30),
+            duration: 3000,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.InOut',
+            delay: i * 500
+        });
+    }
+    
+    // Add a bouncing character
+    let demoPlayer = scene.add.image(config.width / 2, config.height - 200, 'player');
+    demoPlayer.setScale(0.35);
+    demoPlayer.setScrollFactor(0);
+    demoPlayer.setDepth(1001);
+    demoPlayer.setAlpha(0);  
+    startScreenElements.push(demoPlayer);
+    
+    // Fade in player
+    scene.tweens.add({
+        targets: demoPlayer,
+        alpha: 1,
+        duration: 500,
+        delay: 1800,
+        ease: 'Sine.InOut'
+    });
+    
+    // Make player bounce
+    scene.tweens.add({
+        targets: demoPlayer,
+        y: demoPlayer.y - 150,
+        duration: 1000,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.InOut',
+        delay: 1800,
+        onYoyo: () => {
+            // Squash when landing
+            scene.tweens.add({
+                targets: demoPlayer,
+                scaleX: 0.45,
+                scaleY: 0.25,
+                duration: 200,
+                yoyo: true
+            });
+        },
+        onRepeat: () => {
+            // Stretch when jumping
+            scene.tweens.add({
+                targets: demoPlayer,
+                scaleX: 0.3,
+                scaleY: 0.4,
+                duration: 200,
+                yoyo: true
+            });
+        }
+    });
+    
+    // Start button with animation
+    let button = scene.add.image(
+        config.width / 2,
+        config.height * 0.6 + 50,  
+        'startButton' 
+    );
+    button.setScale(0);  
+    button.setScrollFactor(0);
+    button.setDepth(1001);
+    startScreenElements.push(button);
+    // Animate button popping in
+    scene.tweens.add({
+        targets: button,
+        scale: 0.4, 
+        y: config.height * 0.6,  
+        duration: 800,
+        delay: 2000,
+        ease: 'Back.Out',
+        onComplete: () => {
+            button.setInteractive();  
+            
+            // Add continuous bounce effect
+            scene.tweens.add({
+                targets: button,
+                scale: 0.45,
+                duration: 1000,
+                yoyo: true,
+                repeat: -1,
+                ease: 'Sine.InOut'
+            });
+        }
+    });
+    
+    // Button hover effects
+    button.on('pointerover', () => {
+        scene.tweens.add({
+            targets: button,
+            scale: 0.5,
+            duration: 100
+        });
+        button.setTint(0xccccff);
+    });
+    
+    button.on('pointerout', () => {
+        scene.tweens.add({
+            targets: button,
+            scale: 0.45,
+            duration: 100
+        });
+        button.clearTint();
+    });
+    
+    // Click effect and start game
+    button.on('pointerdown', () => {
+        scene.tweens.add({
+            targets: button,
+            scale: 0.35,
+            duration: 100
+        });
+        
+        scene.sound.play('buttonClick');
+
+    });
+    
+    button.on('pointerup', () => {
+        // Play a satisfying zoom effect on all elements
+        scene.tweens.add({
+            targets: startScreenElements,
+            scale: '*=1.1',
+            alpha: 0,
+            duration: 800,
+            ease: 'Power2',
+            onComplete: () => {
+                startScreenActive = false;
+                gameActive = true;
+                
+                // Show the actual player and UI elements
+                if (player) {
+                    player.setVisible(true);
+                }
+                
+                if (scoreText) scoreText.setVisible(true);
+                if (healthPoints) {
+                    healthPoints.children.each(function(point) {
+                        point.setVisible(true);
+                    });
+                }
+                
+                // Show UI elements
+                scene.children.list.forEach(child => {
+                    if (child.texture && 
+                        (child.texture.key === 'scorePanel' || 
+                         child.texture.key === 'healthBar')) {
+                        child.setVisible(true);
+                    }
+                });
+                
+                // Add a slight delay to ensure all elements are properly shown
+                scene.time.delayedCall(100, () => {
+                    // Force show the player again (extra safety)
+                    if (player) player.setVisible(true);
+                });
+                
+                // Remove start screen elements
+                startScreenElements.forEach(element => element.destroy());
+                startScreenElements = [];
+            }
+        });
+    });
 }
