@@ -7,16 +7,16 @@ namespace ECommerceGameSite.Controllers
     {
         public IActionResult Index()
         {
-            List<string> games = new List<string> { "X", "Y", "Z" }; // Oyunlar listesi
+            List<string> games = new List<string> { "ToptanJump", "Y", "Z" }; // Oyunlar listesi
             return View(games); // Listeyi Index View'a gönderiyoruz
         }
 
         public IActionResult Start(string gameName)
         {
-            if (gameName == "X")
+            if (gameName == "ToptanJump")
             {
                 // X oyunu için özel oyun başlatma işlemi
-                return View("StartX"); // X oyunu için özel StartX view'ını yükle
+                return Redirect("/games/x/start.html");
             }
             else if (gameName == "Y")
             {

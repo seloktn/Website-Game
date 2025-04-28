@@ -5,8 +5,204 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.js"></script>
+    <style>
+
+        body {
+        margin: 0;
+        padding: 0;
+        background: linear-gradient(to top right, #77ccff, #003366);
+        background-attachment: fixed;
+        background-size: cover;
+        overflow: hidden;
+    }
+
+    canvas {
+        display: block;
+        margin: 0 auto;
+        outline: 8px solid #c5a90ebc;
+        outline-offset: 0px;
+    }
+
+/* Kuş (bulutun altında sol tarafında) */
+.decor-bird {
+    position: fixed;
+    bottom: 10vh; /* Bulutun biraz altında */
+    right: 25vw; 
+    width: 4vw;
+    height: auto;
+    opacity: 0.7;
+    transform: rotate(-10deg);
+    z-index: 1;
+}
+
+/* Bulut (orta-alt sağda) */
+.decor-cloud {
+    position: fixed;
+    bottom: 18vh; /* Daha yukarı */
+    right: 5vw;
+    width: 10vw;
+    height: auto;
+    opacity: 0.4;
+    animation: cloudMove 60s linear infinite; /* Hafif sağa kayma efekti */
+    z-index: 1;
+}
+
+/* UFO (orta-sağda, rastgele hareketli) */
+.decor-ufo {
+    position: fixed;
+    top: 32vh;
+    right: 10vw;
+    width: 20vw;
+    height: auto;
+    opacity: 0.7;
+    animation: randomFloat 6s infinite ease-in-out;
+    z-index: 1;
+}
+
+/* Uzaylı (üst sağ) */
+.decor-alien {
+    position: fixed;
+    top: 10vh;
+    right: 5vw;
+    width: 8vw;
+    height: auto;
+    opacity: 0.5;
+    z-index: 1;
+}
+
+/* Normal hali */
+.decor-trophy {
+    position: fixed;
+    top: 6vh;
+    left: 20vw;
+    width: 10vw;
+    height: auto;
+    opacity: 0.7;
+    z-index: 1;
+    transition: all 0.3s ease;
+}
+
+/* Hover halinde parlayan + titreşim animasyonu */
+.decor-trophy:hover {
+    animation: trophyPulse 1s infinite alternate;
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+/* Parlama + titreşim animasyonu tanımı */
+@keyframes trophyPulse {
+    0% { box-shadow: 0 0 10px 2px rgba(255, 215, 0, 0.7); }
+    50% { box-shadow: 0 0 20px 4px rgba(255, 215, 0, 1); }
+    100% { box-shadow: 0 0 10px 2px rgba(255, 215, 0, 0.7); }
+}
+
+/* Player karakter (sol üst-orta) */
+.decor-player {
+    position: fixed;
+    top: 36vh;
+    left: 10vw;
+    width: 10vw;
+    height: auto;
+    opacity: 0.7;
+    z-index: 1;
+    transition: all 0.3s ease; /* Yumuşak dönüş için */
+}
+
+
+/* Ground (zemin, sol alt) */
+.decor-ground {
+    position: fixed;
+    bottom: 7vh;
+    left: 7vw;
+    width: 15vw;
+    height: auto;
+    opacity: 0.5;
+    z-index: 0; /* en arkada */
+}
+
+/* Rastgele UFO hareket animasyonu */
+@keyframes randomFloat {
+    0%   { transform: translate(0px, 0px); }
+    20%  { transform: translate(10px, -5px); }
+    40%  { transform: translate(-5px, 8px); }
+    60%  { transform: translate(8px, 4px); }
+    80%  { transform: translate(-8px, -6px); }
+    100% { transform: translate(0px, 0px); }
+}
+
+/* Bulutlar hafif sağa sürüklenir */
+@keyframes cloudMove {
+    0% { transform: translateX(0px); }
+    100% { transform: translateX(30px); }
+}
+
+
+    /* Mobil cihazlarda canvas'ın outline'ını kaldır */
+    @media (max-width: 768px) {
+        canvas {
+        outline: none; /* 🎯 Mobilde sadece outline kaldırılıyor */
+    }
+        .decor-cloud,
+        .decor-ufo,
+        .decor-alien,
+        .decor-trophy,
+        .decor-bird,
+        .decor-player,
+        .decor-ground  {
+            display: none; /* Mobilde gizle */
+        }
+    }
+    
+    </style>
 </head>
 <body>
     <script src="game.js"></script>
+    <!-- Dekoratif Görseller -->
+    <img src="assets/platform.png" class="decor-cloud" />
+    <img src="assets/ufo.png" class="decor-ufo" />
+    <img src="assets/alien.png" class="decor-alien" />
+    <img src="assets/ui/victory_text_space.png" class="decor-trophy" />
+    <img src="assets/bird.png" class="decor-bird" />
+    <img src="assets/player.png" class="decor-player" />
+    <img src="assets/ground.png" class="decor-ground" />
+
+    <audio id="victorySoundEffect" src="assets/sounds/win.mp3" preload="auto"></audio>
+
+    <script>
+        window.addEventListener('load', function () {
+            const trophy = document.querySelector('.decor-trophy');
+            const victorySoundEffect = document.getElementById('victorySoundEffect');
+    
+            if (trophy && victorySoundEffect) {
+                trophy.addEventListener('mouseenter', () => {
+                    if (victorySoundEffect.paused || victorySoundEffect.ended) {
+                        victorySoundEffect.currentTime = 0; // Baştan al
+                        victorySoundEffect.play();
+                    }
+                });
+            }
+        });
+    </script>
+    <script>
+        window.addEventListener('load', function () {
+            const player = document.querySelector('.decor-player');
+            let isAnimating = false; //  Başta boşta
+    
+            if (player) {
+                player.addEventListener('mouseenter', () => {
+                    if (isAnimating) return; // Eğer zaten animasyon varsa, bir şey yapma
+    
+                    isAnimating = true; //  Animasyonu başlat
+                    player.style.transform = 'scaleX(-1)';
+    
+                    setTimeout(() => {
+                        player.style.transform = 'scaleX(1)';
+                        isAnimating = false; //  Animasyon bitti, tekrar tetiklenebilir
+                    }, 1000); // 1 saniye sonra
+                });
+            }
+        });
+    </script>
 </body>
 </html>
+ 
