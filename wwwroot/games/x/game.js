@@ -45,7 +45,76 @@ fetch('/api/product/recommendedImages')
         new Phaser.Game(config);
     });
 
+
 const DEBUG_COLLISIONS = false;
+
+let scoreText;
+
+const GameData = (function () {
+    let score = 0;
+    let coins = 0;
+    let trophy = false;
+    let _scoreText = null;  // BU ÖNEMLİ: "_" ile başlayan özel değişken
+
+    return {
+        addScore(amount) {
+            score += amount;
+            if (_scoreText) {
+                _scoreText.setText(score.toString());
+            }
+        },
+
+        getScore() {
+            return score;
+        },
+
+        addCoin() {
+            if (coins < 40) {
+                coins++;
+                this.addScore(10);
+            }
+        },
+
+        getCoinCount() {
+            return coins;
+        },
+
+        getCollectedCoinCount() {
+            return coins;
+        },
+
+        collectTrophy() {
+            if (!trophy) {
+                trophy = true;
+                this.addScore(50);
+            }
+        },
+
+        hasTrophy() {
+            return trophy;
+        },
+
+        bindScoreText(textObj) {
+            _scoreText = textObj;  // DOĞRU BİR ŞEKİLDE SET ET
+        },
+
+        updateScoreText() {
+            if (_scoreText) {
+                _scoreText.setText(score.toString());
+            }
+        },
+
+        reset() {
+            score = 0;
+            coins = 0;
+            trophy = false;
+            if (_scoreText) _scoreText.setText("0");
+        }
+    };
+})();
+
+
+
 let cursors;
 let touchDirection = null;
 let isTouchDevice = false;
@@ -61,9 +130,6 @@ let lastY = 0;
 let jumpPower = 810;
 let gameOverText;
 let lastPlatformType = "normal";
-let coins;
-let score = 0;
-let scoreText;
 let inSpaceStage = false;
 let spaceThreshold = -(10000 * 0.39);
 let gameActive = true;
@@ -385,6 +451,8 @@ function create() {
     this.physics.add.overlap(player, coins, collectCoin, null, this);
 
     this.physics.add.overlap(player, trophy, () => {
+        GameData.collectTrophy()
+        GameData.updateScoreText();
         showVictoryScreen(this);
     });
 
@@ -739,12 +807,12 @@ function handleMobileControls() {
 
 function collectCoin(player, coin) {
     coin.destroy();
-    score += 10;
-    scoreText.setText(score.toString());
+    GameData.addCoin()
+    GameData.updateScoreText();
 
     this.sound.play('coinSound');
 
-    console.log('Coin collected! Score: ' + score);
+    console.log('Coin collected! Score: ' + GameData.getScore());
 }
 
 function addCoin(scene) {
@@ -1317,7 +1385,7 @@ function showGameOver(scene) {
     let finalScoreText = scene.add.text(
         config.width / 2,
         config.height / 2,
-        'SCORE: ' + score,
+        'SCORE: ...',
         {
             fontSize: '40px',
             fontFamily: 'monospace',
@@ -1397,6 +1465,25 @@ function showGameOver(scene) {
 
         scene.scene.restart();
     });
+
+    // API'ye skoru gönder
+fetch('/api/score/submit', {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+        coins: Math.min(GameData.getCollectedCoinCount(), 40),
+        trophy: GameData.hasTrophy() ? 1 : 0
+    })
+})
+.then(res => res.json())
+.then(data => {
+    console.log('GameOver Sunucu Skor Yanıtı:', data);
+     finalScoreText.setText('SCORE: ' + data.score);
+});
+
+
     scene.sound.play('gameOverSound');
 }
 
@@ -1437,7 +1524,7 @@ function showVictoryScreen(scene) {
     let finalScoreText = scene.add.text(
         config.width / 2,
         config.height / 2 + 250,
-        'SCORE: ' + score,
+        'SCORE:...',
         {
             fontSize: '40px',
             fontFamily: 'monospace',
@@ -1449,6 +1536,23 @@ function showVictoryScreen(scene) {
     finalScoreText.setOrigin(0.5);
     finalScoreText.setScrollFactor(0);
     finalScoreText.setDepth(1000);
+
+    // Skoru sunucuya bildir
+    fetch('/api/score/submit', {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+        coins: Math.min(GameData.getCollectedCoinCount(), 40),
+        trophy: GameData.hasTrophy() ? 1 : 0
+    })
+    })
+    .then(res => res.json())
+    .then(data => {
+    console.log('Sunucu yanıtı:', data);
+    finalScoreText.setText('SCORE: ' + data.score);
+});
 
     // Restart button
     let restartButton = scene.add.image(
@@ -1635,16 +1739,19 @@ function createUI() {
     scorePanel.setScrollFactor(0);
     scorePanel.setDepth(1000);
 
-    scoreText = this.add.text(155, 38, score.toString(), {
-        fontSize: '22px',
-        fontFamily: 'monospace',
-        fill: '#ffffff',
-        stroke: '#ff0000',
-        strokeThickness: 2
-    });
-    scoreText.setOrigin(0.5);
-    scoreText.setScrollFactor(0);
-    scoreText.setDepth(1001);
+   let scoreTextObj = this.add.text(155, 38, "0", {
+    fontSize: '22px',
+    fontFamily: 'monospace',
+    fill: '#ffffff',
+    stroke: '#ff0000',
+    strokeThickness: 2
+});
+    scoreTextObj.setOrigin(0.5);
+    scoreTextObj.setScrollFactor(0);
+    scoreTextObj.setDepth(1001);
+    GameData.bindScoreText(scoreTextObj);
+    scoreText = scoreTextObj;
+
 
     // Health bar container
     let healthBarContainer = this.add.image(config.width - 120, 30, 'healthBar');
@@ -2152,4 +2259,5 @@ function createStartScreen(scene) {
             closeText.destroy();
         });
     });
+    
 }

@@ -197,6 +197,14 @@
       "PackagePath": "staticwebassets\\games\\x\\start.html"
     },
     {
+      "Id": "C:\\Users\\okano\\ECommerceGameSite\\wwwroot\\games\\z\\game_z.js",
+      "PackagePath": "staticwebassets\\games\\z\\game_z.js"
+    },
+    {
+      "Id": "C:\\Users\\okano\\ECommerceGameSite\\wwwroot\\games\\z\\start_z.html",
+      "PackagePath": "staticwebassets\\games\\z\\start_z.html"
+    },
+    {
       "Id": "C:\\Users\\okano\\ECommerceGameSite\\wwwroot\\images\\Terlik.png",
       "PackagePath": "staticwebassets\\images\\Terlik.png"
     },

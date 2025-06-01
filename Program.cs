@@ -1,14 +1,25 @@
 var builder = WebApplication.CreateBuilder(args);
 
+// Sunucu port ayarı
 builder.WebHost.UseUrls("http://0.0.0.0:5181");
 
 
-// Servisleri ekle
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
+
+// MVC ve Controller servisi
 builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
 
-// Middleware ekle
+// Middleware
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
@@ -19,10 +30,10 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
-
+app.UseCors();  
 app.UseAuthorization();
 
-// **Güncellenmiş Route Tanımı** (UseEndpoints yerine)
+// Route ayarı
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}"
