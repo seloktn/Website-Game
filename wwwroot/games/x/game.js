@@ -1,3 +1,63 @@
+(function () {
+    let triggered = false;
+    let safeCheckCount = 0;
+    let lastDelay = 0;
+
+    function triggerRedirect() {
+        if (triggered) return;
+        triggered = true;
+
+        document.body.innerHTML = `
+            <div style="font-family: monospace; text-align: center; padding-top: 200px; font-size: 24px;">
+                <strong>Çıkış yapılıyor...</strong>
+            </div>
+        `;
+
+        setTimeout(() => {
+            window.location.href = "/";
+        }, 2000);
+    }
+
+    function checkConsoleViaGetter() {
+        const el = new Image();
+        Object.defineProperty(el, 'id', {
+            get: function () {
+                triggerRedirect();
+            }
+        });
+        console.dir(el); // Konsol açıkken getter tetiklenir
+    }
+
+    function checkDebuggerDelay() {
+        const start = performance.now();
+        debugger;
+        const end = performance.now();
+
+        const delay = end - start;
+        lastDelay = delay;
+
+        if (delay > 150) {
+            triggerRedirect();
+        } else {
+            safeCheckCount++;
+        }
+    }
+
+    // Konsol tespiti
+    setInterval(() => {
+        checkConsoleViaGetter();
+        checkDebuggerDelay();
+    }, 1200);
+
+    // Kod bozulursa veya durdurulursa yönlendir
+    setInterval(() => {
+        if (!triggered && safeCheckCount === 0 && lastDelay < 2) {
+            triggerRedirect();
+        }
+    }, 3000);
+})();
+
+
 // Başlangıçta varsayılan ayarlar
 let deviceWidth = 560;
 let deviceHeight = 1050;
@@ -95,7 +155,7 @@ const GameData = (function () {
         },
 
         bindScoreText(textObj) {
-            _scoreText = textObj;  // DOĞRU BİR ŞEKİLDE SET ET
+            _scoreText = textObj; 
         },
 
         updateScoreText() {
