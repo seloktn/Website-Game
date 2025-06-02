@@ -110,70 +110,54 @@ const DEBUG_COLLISIONS = false;
 
 let scoreText;
 
-const GameData = (function () {
+const _dS1 = (() => {
     let score = 0;
     let coins = 0;
     let trophy = false;
-    let _scoreText = null;  // BU ÖNEMLİ: "_" ile başlayan özel değişken
+    let _scoreText = null;
+
+    const addScore = (amount) => {
+        score += amount;
+        if (_scoreText) {
+            _scoreText.setText(score.toString());
+        }
+    };
+
+    const addCoin = () => {
+        if (coins < 40) {
+            coins++;
+            addScore(10);
+        }
+    };
+
+    const collectTrophy = () => {
+        if (!trophy) {
+            trophy = true;
+            addScore(50);
+        }
+    };
 
     return {
-        addScore(amount) {
-            score += amount;
-            if (_scoreText) {
-                _scoreText.setText(score.toString());
-            }
+        getScore: () => score,
+        getCoinCount: () => coins,
+        getCollectedCoinCount: () => coins,
+        hasTrophy: () => trophy,
+        bindScoreText: (txt) => _scoreText = txt,
+        updateScoreText: () => {
+            if (_scoreText) _scoreText.setText(score.toString());
         },
-
-        getScore() {
-            return score;
-        },
-
-        addCoin() {
-            if (coins < 40) {
-                coins++;
-                this.addScore(10);
-            }
-        },
-
-        getCoinCount() {
-            return coins;
-        },
-
-        getCollectedCoinCount() {
-            return coins;
-        },
-
-        collectTrophy() {
-            if (!trophy) {
-                trophy = true;
-                this.addScore(50);
-            }
-        },
-
-        hasTrophy() {
-            return trophy;
-        },
-
-        bindScoreText(textObj) {
-            _scoreText = textObj; 
-        },
-
-        updateScoreText() {
-            if (_scoreText) {
-                _scoreText.setText(score.toString());
-            }
-        },
-
-        reset() {
+        reset: () => {
             score = 0;
             coins = 0;
             trophy = false;
             if (_scoreText) _scoreText.setText("0");
-        }
+        },
+
+        // Bu ikisini sadece gerçekten gerekliyse dışarı aç
+        internalAddCoin: addCoin,
+        internalCollectTrophy: collectTrophy
     };
 })();
-
-
 
 let cursors;
 let touchDirection = null;
@@ -510,11 +494,11 @@ function create() {
     //fizik eklemeleri
     this.physics.add.overlap(player, coins, collectCoin, null, this);
 
-    this.physics.add.overlap(player, trophy, () => {
-        GameData.collectTrophy()
-        GameData.updateScoreText();
-        showVictoryScreen(this);
-    });
+   this.physics.add.overlap(player, trophy, () => {
+    _dS1.internalCollectTrophy();
+    _dS1.updateScoreText();
+    showVictoryScreen(this);
+});
 
     this.physics.add.overlap(player, enemies, handleEnemyCollision, null, this);
 
@@ -867,12 +851,12 @@ function handleMobileControls() {
 
 function collectCoin(player, coin) {
     coin.destroy();
-    GameData.addCoin()
-    GameData.updateScoreText();
+    _dS1.internalAddCoin();
+    _dS1.updateScoreText();
 
     this.sound.play('coinSound');
 
-    console.log('Coin collected! Score: ' + GameData.getScore());
+    console.log('Coin collected! Score: ' + _dS1.getScore());
 }
 
 function addCoin(scene) {
@@ -1533,8 +1517,8 @@ fetch('/api/score/submit', {
         'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-        coins: Math.min(GameData.getCollectedCoinCount(), 40),
-        trophy: GameData.hasTrophy() ? 1 : 0
+    coins: Math.min(_dS1.getCollectedCoinCount(), 40),
+    trophy: _dS1.hasTrophy() ? 1 : 0
     })
 })
 .then(res => res.json())
@@ -1604,8 +1588,8 @@ function showVictoryScreen(scene) {
         'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-        coins: Math.min(GameData.getCollectedCoinCount(), 40),
-        trophy: GameData.hasTrophy() ? 1 : 0
+        coins: Math.min(_dS1.getCollectedCoinCount(), 40),
+        trophy: _dS1.hasTrophy() ? 1 : 0
     })
     })
     .then(res => res.json())
@@ -1809,7 +1793,7 @@ function createUI() {
     scoreTextObj.setOrigin(0.5);
     scoreTextObj.setScrollFactor(0);
     scoreTextObj.setDepth(1001);
-    GameData.bindScoreText(scoreTextObj);
+    _dS1.bindScoreText(scoreTextObj);
     scoreText = scoreTextObj;
 
 
