@@ -92,18 +92,24 @@ const config = {
         create: create,
         update: update
     }
-};
+}; Object.seal(config);
 
+let gameRules = {}; 
 let recommendedImages = [];
 
-// İlk önce coin görsellerini al
-fetch('/api/product/recommendedImages')
-    .then(res => res.json())
-    .then(images => {
-        recommendedImages = images;
+// İlk olarak kuralları ve görselleri alır
+Promise.all([
+  fetch('/api/score/rules').then(res => res.json()),
+  fetch('/api/product/recommendedImages').then(res => res.json())
+])
+.then(([rules, images]) => {
+  gameRules = rules;
+  recommendedImages = images;
 
-        new Phaser.Game(config);
-    });
+  // Oyun başlat
+  new Phaser.Game(config);
+});
+
 
 
 const DEBUG_COLLISIONS = false;
@@ -157,7 +163,7 @@ const _dS1 = (() => {
         internalAddCoin: addCoin,
         internalCollectTrophy: collectTrophy
     };
-})();
+})(); Object.freeze(_dS1);
 
 let cursors;
 let touchDirection = null;
@@ -200,6 +206,16 @@ let canPlayAlienSound = true;
 let canPlayUfoSound = true;
 let isMuted = false;
 let soundToggleButton;
+
+const GameTimer = (() => {
+    let startTime = Date.now();
+
+    return {
+        reset: () => startTime = Date.now(),
+        getDuration: () => Date.now() - startTime
+    };
+})();
+
 
 
 function preload() {
@@ -1510,15 +1526,18 @@ function showGameOver(scene) {
         scene.scene.restart();
     });
 
-    // API'ye skoru gönder
+    const durationMs = GameTimer.getDuration();
+
+    // API'ye skor gönderme
 fetch('/api/score/submit', {
     method: 'POST',
     headers: {
         'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-    coins: Math.min(_dS1.getCollectedCoinCount(), 40),
-    trophy: _dS1.hasTrophy() ? 1 : 0
+    coins: _dS1.getCollectedCoinCount(),
+    trophy: _dS1.hasTrophy() ? 1 : 0,
+    durationMs: durationMs
     })
 })
 .then(res => res.json())
@@ -1529,6 +1548,8 @@ fetch('/api/score/submit', {
 
 
     scene.sound.play('gameOverSound');
+    _dS1.reset();        
+    GameTimer.reset();
 }
 
 function showVictoryScreen(scene) {
@@ -1581,6 +1602,8 @@ function showVictoryScreen(scene) {
     finalScoreText.setScrollFactor(0);
     finalScoreText.setDepth(1000);
 
+    const durationMs = GameTimer.getDuration();
+
     // Skoru sunucuya bildir
     fetch('/api/score/submit', {
     method: 'POST',
@@ -1588,8 +1611,9 @@ function showVictoryScreen(scene) {
         'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-        coins: Math.min(_dS1.getCollectedCoinCount(), 40),
-        trophy: _dS1.hasTrophy() ? 1 : 0
+        coins: _dS1.getCollectedCoinCount(),
+        trophy: _dS1.hasTrophy() ? 1 : 0,
+        durationMs: durationMs
     })
     })
     .then(res => res.json())
@@ -1597,6 +1621,9 @@ function showVictoryScreen(scene) {
     console.log('Sunucu yanıtı:', data);
     finalScoreText.setText('SCORE: ' + data.score);
 });
+
+    _dS1.reset();        
+    GameTimer.reset(); 
 
     // Restart button
     let restartButton = scene.add.image(
@@ -2138,6 +2165,9 @@ function createStartScreen(scene) {
         if (isPopupOpen) return; // zaten açıksa işlem yapma
 
         isPopupOpen = true;
+        
+        GameTimer.reset(); 
+
         // Play a satisfying zoom effect on all elements
         scene.tweens.add({
             targets: startScreenElements,
@@ -2303,5 +2333,4 @@ function createStartScreen(scene) {
             closeText.destroy();
         });
     });
-    
 }
