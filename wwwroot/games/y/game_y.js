@@ -25,14 +25,69 @@ class StartScene extends Phaser.Scene {
         this.load.audio('gameover-sound', 'assets_y/sounds/gameover.mp3');
         this.load.audio('buttonClick', 'assets_y/sounds/button-click.mp3');
         this.load.audio('cashier-sound', 'assets_y/sounds/cashier.mp3');
-
-
-
-
-
     }
 
     create() {
+        (function () {
+            let triggered = false;
+            let safeCheckCount = 0;
+            let lastDelay = 0;
+
+
+            function triggerRedirect() {
+                if (triggered) return;
+                triggered = true;
+
+                document.body.innerHTML = `
+            <div style="font-family: monospace; text-align: center; padding-top: 200px; font-size: 24px;">
+                <strong>Cikis yapiliyor...</strong>
+            </div>
+        `;
+
+                setTimeout(() => {
+                    window.location.href = "/";
+                }, 2000);
+            }
+
+
+
+            function checkConsoleViaGetter() {
+                const el = new Image();
+                Object.defineProperty(el, 'id', {
+                    get: function () {
+                        triggerRedirect();
+                    }
+                });
+                console.dir(el); // Konsol açıkken getter tetiklenir
+            }
+
+            function checkDebuggerDelay() {
+                const start = performance.now();
+                debugger;
+                const end = performance.now();
+
+                const delay = end - start;
+                lastDelay = delay;
+
+                if (delay > 150) {
+                    triggerRedirect();
+                } else {
+                    safeCheckCount++;
+                }
+            }
+
+            setInterval(() => {
+                checkConsoleViaGetter();
+                checkDebuggerDelay();
+            }, 1200);
+
+            setInterval(() => {
+                if (!triggered && safeCheckCount === 0 && lastDelay < 2) {
+                    triggerRedirect();
+                }
+            }, 3000);
+        })();
+
         this.recommendedImages = [];
 
         fetch('/api/product/recommendedImages')
@@ -197,7 +252,8 @@ class StartScene extends Phaser.Scene {
                         alpha: 1,
                         duration: 500,
                         onComplete: () => {
-                           this.scene.start('GameScene', { images: this.recommendedImages });
+                            ScoreManager.reset();
+                            this.scene.start('GameScene', { images: this.recommendedImages });
                         }
                     });
                 }
@@ -262,7 +318,50 @@ class StartScene extends Phaser.Scene {
 
     }
 }
+// ------------------- Score Manager -------------------
 
+const ScoreManager = (() => {
+    let score = 0;
+    let coins = 0;
+    let trophy = false;
+    let scoreText = null;
+    let startTime = 0;
+
+    return {
+        reset: function () {
+            score = 0;
+            coins = 0;
+            trophy = false;
+            startTime = performance.now(); // zaman başlat
+            if (scoreText) scoreText.setText("0");
+        },
+
+        addCoin: function () {
+            if (coins < 30) {
+                coins++;
+                score += 10;
+                if (scoreText) scoreText.setText(score.toString());
+            }
+        },
+
+        collectTrophy: function () {
+            if (!trophy) {
+                trophy = true;
+                score += 50;
+                if (scoreText) scoreText.setText(score.toString());
+            }
+        },
+
+        bindScoreText: function (textObj) {
+            scoreText = textObj;
+        },
+
+        getScore: () => score,
+        getCoins: () => coins,
+        hasTrophy: () => trophy,
+        getElapsedTimeMs: () => Math.floor(performance.now() - startTime)
+    };
+})();
 
 // ------------------- Game Scene -------------------
 class GameScene extends Phaser.Scene {
@@ -342,11 +441,6 @@ class GameScene extends Phaser.Scene {
         this.heartSpawnInterval = 0;
         this.heartsLeft = 3;
         this.heartsLeftText;
-
-        this.itemScore = 0;
-        this.itemScoreText;
-
-        this.trophy;
         this.currentDifficulty = null;
 
         // Physics world bounds
@@ -462,6 +556,7 @@ class GameScene extends Phaser.Scene {
         });
         this.itemScoreText.setOrigin(0, 0.5);
         this.itemScoreText.setScrollFactor(0);
+        ScoreManager.bindScoreText(this.itemScoreText);
 
 
         this.heartIcons = [];
@@ -504,19 +599,19 @@ class GameScene extends Phaser.Scene {
         this.lastPlayerX = this.player.x;
 
         // Zorluk ayarı
-        if (this.itemScore < 100) {
+        if (ScoreManager.getScore() < 100) {
             this.setDifficulty('easy');
         }
-        else if (this.itemScore < 200) {
+        else if (ScoreManager.getScore() < 200) {
             this.setDifficulty('medium');
         }
-        else if (this.itemScore < 500) {
+        else if (ScoreManager.getScore() < 500) {
             this.setDifficulty('hard');
         }
-        else if (this.itemScore < 1000) {
+        else if (ScoreManager.getScore() < 1000) {
             this.setDifficulty('veryhard');
         }
-        else if (this.itemScore >= 1000) {
+        else if (ScoreManager.getScore() >= 1000) {
             this.clearScreen();
             this.trophy.setVelocityY(200);
         }
@@ -585,34 +680,51 @@ class GameScene extends Phaser.Scene {
     }
 
     addItem() {
-    if (!this.recommendedImages || this.recommendedImages.length === 0) return;
+        if (!this.recommendedImages || this.recommendedImages.length === 0) return;
 
-    let x = Phaser.Math.Between(50, config.width - 50);
-    let y = Phaser.Math.Between(-100, -300);
-    
-    let imageUrl = Phaser.Utils.Array.GetRandom(this.recommendedImages);
-    let imageName = imageUrl.substring(imageUrl.lastIndexOf('/') + 1, imageUrl.lastIndexOf('.'));
+        let x = Phaser.Math.Between(50, config.width - 50);
+        let y = Phaser.Math.Between(-100, -300);
 
-    if (!this.textures.exists(imageName)) {
-        this.load.image(imageName, imageUrl);
-        this.load.once('filecomplete-image-' + imageName, () => {
+        let imageUrl = Phaser.Utils.Array.GetRandom(this.recommendedImages);
+        let imageName = imageUrl.substring(imageUrl.lastIndexOf('/') + 1, imageUrl.lastIndexOf('.'));
+
+        if (!this.textures.exists(imageName)) {
+            this.load.image(imageName, imageUrl);
+            this.load.once('filecomplete-image-' + imageName, () => {
+                let item = this.items.create(x, y, imageName);
+                item.setScale(0.12);
+            });
+            this.load.start();
+        } else {
             let item = this.items.create(x, y, imageName);
             item.setScale(0.12);
-        });
-        this.load.start();
-    } else {
-        let item = this.items.create(x, y, imageName);
-        item.setScale(0.12);
+        }
     }
-}
 
 
     collectCoin(player, item) {
         item.destroy();
         this.coinSound.play();
-        this.itemScore += 10;
-        this.itemScoreText.setText(this.itemScore);
+        ScoreManager.addCoin();
+
     }
+
+    submitScoreToServer() {
+        const payload = {
+            coins: ScoreManager.getCoins(),
+            trophy: ScoreManager.hasTrophy() ? 1 : 0,
+            durationMs: ScoreManager.getElapsedTimeMs()
+        };
+
+        return fetch('/api/score/submit', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        }).then(res => res.json());
+    }
+
 
     addBomb() {
         let x = Phaser.Math.Between(50, config.width - 50);
@@ -701,9 +813,14 @@ class GameScene extends Phaser.Scene {
                 // Bomba sesi bittikten sonra sadece gameover sesi çalacak
                 this.gameOverSound.play();
 
-                // Gameover sesi bittikten sonra sahne değiştir
-                this.time.delayedCall(this.gameOverSound.duration * 1000, () => {
-                    this.scene.start('GameOverScene', { score: this.itemScore });
+                this.submitScoreToServer().then(response => {
+                    const verifiedScore = response.score || 0;
+
+                    // Gameover sesi bittikten sonra sahne değiştir
+                    this.time.delayedCall(this.gameOverSound.duration * 1000, () => {
+                        this.scene.start('GameOverScene', { score: verifiedScore });
+                    });
+
                 });
             });
         }
@@ -799,12 +916,14 @@ class GameScene extends Phaser.Scene {
         trophy.destroy();
         this.gameActive = false;
         player.setTint(0x00ff00);
+        this.victorySound.play();
 
-        this.victorySound.play()
+        this.submitScoreToServer().then(response => {
+            const verifiedScore = response.score || 0;
 
-        // Win ekranına geç
-        this.time.delayedCall(1500, () => {
-            this.scene.start('WinScene', { score: this.itemScore });
+            this.time.delayedCall(1500, () => {
+                this.scene.start('WinScene', { score: verifiedScore });
+            });
         });
     }
 }
@@ -813,11 +932,6 @@ class GameOverScene extends Phaser.Scene {
     constructor() {
         super({ key: 'GameOverScene' });
     }
-
-    init(data) {
-        this.finalScore = data.score || 0;
-    }
-
     preload() {
         this.load.image('background', 'assets_y/background.png');
         this.load.image('bomb', 'assets_y/bombCopy.png');
@@ -899,7 +1013,7 @@ class GameOverScene extends Phaser.Scene {
         const scoreValueX = 78;
 
         // Add score value text
-        const scoreValue = this.add.text(scoreValueX, -8, `${this.finalScore}`, {
+        const scoreValue = this.add.text(scoreValueX, -8, `${ScoreManager.getScore()}`, {
             fontSize: '26px',
             fontFamily: 'monospace',
             fill: '#666666',
@@ -929,6 +1043,7 @@ class GameOverScene extends Phaser.Scene {
         });
 
         restartButton.on('pointerup', () => {
+            ScoreManager.reset();
             this.buttonClickSound.play();
             this.scene.start('StartScene');
         });
@@ -957,10 +1072,6 @@ class GameOverScene extends Phaser.Scene {
 class WinScene extends Phaser.Scene {
     constructor() {
         super({ key: 'WinScene' });
-    }
-
-    init(data) {
-        this.finalScore = data.score || 0;
     }
 
     preload() {
@@ -1050,7 +1161,7 @@ class WinScene extends Phaser.Scene {
         scoreContainer.add(scoreLabelImg);
 
         // Add score 
-        let scoreValueText = this.add.text(145, -10, `${this.finalScore}`, {
+        let scoreValueText = this.add.text(145, -10, `${ScoreManager.getScore()}`, {
             fontSize: '20px',
             fontFamily: 'monospace',
             fontWeight: 'bold',
@@ -1080,6 +1191,7 @@ class WinScene extends Phaser.Scene {
         });
 
         restartButton.on('pointerup', () => {
+            ScoreManager.reset();
             this.buttonClickSound.play();
             this.scene.start('StartScene');
         });
