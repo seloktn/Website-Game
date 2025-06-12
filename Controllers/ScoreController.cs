@@ -24,7 +24,7 @@ public class ScoreController : ControllerBase
         }
 
         bool isValid = true;
-        string invalidReason = "Geçerli"; 
+        string invalidReason = "Geçerli";
 
         Console.WriteLine($"[Skor Kontrol] Gelen Veri - Coins: {data.Coins}, Trophy: {data.Trophy}, Duration: {data.DurationMs}ms");
 
@@ -54,7 +54,7 @@ public class ScoreController : ControllerBase
 
         //  Coin toplama hızı kontrolü saniyede 1 coinden fazla toplanamaz
         double durationInSeconds = data.DurationMs / 1000.0;
-        if (data.Coins > durationInSeconds) 
+        if (data.Coins > durationInSeconds)
         {
             isValid = false;
             invalidReason = $"Coin toplama hızı izin verilen oranı aştı ({data.Coins} coin / {durationInSeconds:F2} sn). Saniyede 1 coinden fazla toplanamaz.";
@@ -81,7 +81,7 @@ public class ScoreController : ControllerBase
 
         return Ok(new
         {
-            success = isValid, 
+            success = isValid,
             score = finalScore,
             message = message
         });

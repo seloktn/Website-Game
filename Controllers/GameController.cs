@@ -21,7 +21,7 @@ namespace ECommerceGameSite.Controllers
             else if (gameName == "Y")
             {
                 // Y oyunu için özel oyun başlatma işlemi
-                return View("StartY"); // Y oyunu için özel StartY view'ını yükle
+                 return Redirect("/games/y/start_y.html");
             }
             else if (gameName == "Z")
             {
