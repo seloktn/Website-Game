@@ -45,6 +45,10 @@ fetch('/api/product/recommendedImages')
         new Phaser.Game(config);
     });
 
+let coinSpawnedCount = 0;
+const maxCoins = 30;
+
+
 const DEBUG_COLLISIONS = false;
 let cursors;
 let touchDirection = null;
@@ -74,7 +78,7 @@ let healthText;
 let enemies;
 let cloudSpawnThreshold = -(10000 * 0.01);
 let gameOverScreen;
-let victoryY = spaceThreshold - 7800;
+let victoryY = spaceThreshold - 4800;
 let victoryScreen;
 let victoryAchieved = false;
 let trophy;
@@ -359,6 +363,9 @@ function create() {
 
     createUI.call(this);
 
+
+   generateAllCoins(this);
+
     //game over text oluşturma
     gameOverText = this.add.text(150, config.height / 2, 'Game Over!', {
         fontSize: '50px',
@@ -432,6 +439,7 @@ function create() {
     }
 }
 
+
 function update() {
     if (startScreenActive) return;
     if (gameActive && this.physics.world.isPaused) {
@@ -468,9 +476,10 @@ function update() {
             lastPlatformType = "breaking";
         }
 
-        if (Phaser.Math.Between(1, 10) <= 4) {
-            addCoin(this);
-        }
+        if (coinSpawnedCount < maxCoins) {
+    addCoin(this);
+    coinSpawnedCount++;
+}
     }
 
     // Camera follow logic for jumping and falling
@@ -747,80 +756,51 @@ function collectCoin(player, coin) {
     console.log('Coin collected! Score: ' + score);
 }
 
-function addCoin(scene) {
-    if (!recommendedImages || recommendedImages.length === 0) return;
+function addCoin(scene, x, y) {
+  // 1) Pozisyonu belirle (yoksa rastgele)
+  const px = (typeof x === 'number') ? x : Phaser.Math.Between(50, config.width - 50);
+  const py = (typeof y === 'number') ? y : lastPlatformY - platformGap;
 
-    let x = Phaser.Math.Between(0, config.width);
-    let y = Phaser.Math.Between(lastPlatformY - platformGap - 100, lastPlatformY - platformGap + 100);
+  // 2) Görsel seç
+  const imageUrl  = Phaser.Utils.Array.GetRandom(recommendedImages);
+  const imageName = imageUrl.substring(
+    imageUrl.lastIndexOf('/') + 1,
+    imageUrl.lastIndexOf('.')
+  );
 
-    let imageUrl = Phaser.Utils.Array.GetRandom(recommendedImages);
-    let imageName = imageUrl.substring(imageUrl.lastIndexOf('/') + 1, imageUrl.lastIndexOf('.'));
+  // 3) Container + image + scale
+  const coin = scene.add.container(px, py);
+  const img  = scene.add.image(0, 0, imageName);
+  const maxSize = 100 + (isMobile ? 0 : deviceWidth * 0.040);
+  const tex     = scene.textures.get(imageName).getSourceImage();
+  const scale   = Math.min(maxSize/tex.width, maxSize/tex.height);
+  img.setScale(scale);
+  coin.add(img);
 
-    let coin = scene.add.container(x, y);
-    let image = scene.add.image(0, 0, imageName);
+  // 4) Physics ayarları
+  scene.physics.world.enable(coin);
+  coin.body.setSize(maxSize, maxSize);
+  coin.body.setOffset(-maxSize/2, -maxSize/2);
+  coin.body.setAllowGravity(false);
+  coin.body.setImmovable(true);
+  coins.add(coin);
 
-    //  Coin büyüklüğü ayarı
-    let maxSize = 100;
-    if (!isMobile) {
-        maxSize += deviceWidth * 0.040; // PC'de %ekle
-    }
+  // 5) Sayaç güncelle
+  coinSpawnedCount++;
+}
 
-    const texture = scene.textures.get(imageName).getSourceImage();
-    const scale = Math.min(maxSize / texture.width, maxSize / texture.height);
-    image.setScale(scale);
 
-    coin.add(image);
+function generateAllCoins(scene) {
+  const startOffset   = 600;
+  const minY          = victoryY;
+  const effectiveMaxY = config.height - startOffset;
+  const totalRange    = effectiveMaxY - minY;
 
-    scene.physics.world.enable(coin);
-    coin.body.setSize(maxSize, maxSize); // hitbox da büyüsün
-    coin.body.setOffset(-maxSize / 2, -maxSize / 2);
-    coin.body.setAllowGravity(false);
-    coin.body.setImmovable(true);
-
-    coins.add(coin);
-
-    // Çakışma kontrolü
-    let attempts = 0;
-    let isOverlapping;
-
-    do {
-        isOverlapping = false;
-
-        coins.children.each(existing => {
-            if (coin !== existing && Phaser.Geom.Intersects.RectangleToRectangle(coin.getBounds(), existing.getBounds())) {
-                isOverlapping = true;
-            }
-        });
-
-        normalPlatforms.children.each(platform => {
-            if (Phaser.Geom.Intersects.RectangleToRectangle(coin.getBounds(), platform.getBounds())) {
-                isOverlapping = true;
-            }
-        });
-
-        movingPlatforms.children.each(platform => {
-            if (Phaser.Geom.Intersects.RectangleToRectangle(coin.getBounds(), platform.getBounds())) {
-                isOverlapping = true;
-            }
-        });
-
-        breakingPlatforms.children.each(platform => {
-            if (Phaser.Geom.Intersects.RectangleToRectangle(coin.getBounds(), platform.getBounds())) {
-                isOverlapping = true;
-            }
-        });
-
-        if (isOverlapping) {
-            coin.setPosition(
-                Phaser.Math.Between(0, config.width),
-                Phaser.Math.Between(lastPlatformY - platformGap - 100, lastPlatformY - platformGap + 100)
-            );
-            attempts++;
-        }
-
-    } while (isOverlapping && attempts < 10);
-
-    if (isOverlapping) coin.destroy();
+  for (let i = 1; i <= maxCoins; i++) {
+    const x = Phaser.Math.Between(50, config.width - 50);
+    const y = effectiveMaxY - (totalRange * (i / (maxCoins + 1)));
+    addCoin(scene, x, y);
+  }
 }
 
 
