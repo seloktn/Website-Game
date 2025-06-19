@@ -339,7 +339,7 @@ const ScoreManager = (() => {
         addCoin: function () {
             if (coins < 30) {
                 coins++;
-                score += 10;
+                score += 5;
                 if (scoreText) scoreText.setText(score.toString());
             }
         },
@@ -599,19 +599,19 @@ class GameScene extends Phaser.Scene {
         this.lastPlayerX = this.player.x;
 
         // Zorluk ayarı
-        if (ScoreManager.getScore() < 100) {
+        if (ScoreManager.getScore() < 20) {
             this.setDifficulty('easy');
         }
-        else if (ScoreManager.getScore() < 200) {
+        else if (ScoreManager.getScore() < 45) {
             this.setDifficulty('medium');
         }
-        else if (ScoreManager.getScore() < 500) {
+        else if (ScoreManager.getScore() < 70) {
             this.setDifficulty('hard');
         }
-        else if (ScoreManager.getScore() < 1000) {
+        else if (ScoreManager.getScore() < 95) {
             this.setDifficulty('veryhard');
         }
-        else if (ScoreManager.getScore() >= 1000) {
+        else if (ScoreManager.getScore() >= 120) {
             this.clearScreen();
             this.trophy.setVelocityY(200);
         }
@@ -881,34 +881,34 @@ class GameScene extends Phaser.Scene {
 
         switch (difficulty) {
             case 'easy':
-                this.itemSpawnInterval = 2000;
-                this.bombSpawnInterval = 5000;
-                this.heartSpawnInterval = 10000;
-                this.iceCubeSpawnInterval = 8000;
-                break;
-            case 'medium':
-                this.itemSpawnInterval = 1000;
+                this.itemSpawnInterval = 4000;
                 this.bombSpawnInterval = 2000;
-                this.heartSpawnInterval = 10000;
-                this.iceCubeSpawnInterval = 8000;
-                break;
-            case 'hard':
-                this.itemSpawnInterval = 750;
-                this.bombSpawnInterval = 1250;
-                this.heartSpawnInterval = 10000;
-                this.iceCubeSpawnInterval = 7500;
-                break;
-            case 'veryhard':
-                this.itemSpawnInterval = 500;
-                this.bombSpawnInterval = 750;
-                this.heartSpawnInterval = 7500;
+                this.heartSpawnInterval = 30000;
                 this.iceCubeSpawnInterval = 5000;
                 break;
-            default:
+            case 'medium':
+                this.itemSpawnInterval = 3000;
+                this.bombSpawnInterval = 1500;
+                this.heartSpawnInterval = 30000;
+                this.iceCubeSpawnInterval = 4500;
+                break;
+            case 'hard':
                 this.itemSpawnInterval = 2000;
-                this.bombSpawnInterval = 5000;
-                this.heartSpawnInterval = 10000;
-                this.iceCubeSpawnInterval = 8000;
+                this.bombSpawnInterval = 1000;
+                this.heartSpawnInterval = 20000;
+                this.iceCubeSpawnInterval = 3500;
+                break;
+            case 'veryhard':
+                this.itemSpawnInterval = 2000;
+                this.bombSpawnInterval = 750;
+                this.heartSpawnInterval = 15000;
+                this.iceCubeSpawnInterval = 3500;
+                break;
+            default:
+                this.itemSpawnInterval = 3000;
+                this.bombSpawnInterval = 1500;
+                this.heartSpawnInterval = 30000;
+                this.iceCubeSpawnInterval = 4500;
         }
     }
 

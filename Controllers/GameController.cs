@@ -7,7 +7,7 @@ namespace ECommerceGameSite.Controllers
     {
         public IActionResult Index()
         {
-            List<string> games = new List<string> { "ToptanJump", "Y", "Z" }; // Oyunlar listesi
+            List<string> games = new List<string> { "ToptanJump", "Y", "Z", "W" }; // Oyunlar listesi
             return View(games); // Listeyi Index View'a gönderiyoruz
         }
 
@@ -26,7 +26,12 @@ namespace ECommerceGameSite.Controllers
             else if (gameName == "Z")
             {
                 // Z oyunu için özel oyun başlatma işlemi
-                return View("StartZ"); // Z oyunu için özel StartZ view'ını yükle
+                 return Redirect("/games/z/start_z.html");
+            }
+            else if (gameName == "W")
+            {
+                // W oyunu için özel oyun başlatma işlemi
+                 return Redirect("/games/w/start_w.html");
             }
 
             return NotFound(); // Eğer oyun bulunamazsa 404 döndür

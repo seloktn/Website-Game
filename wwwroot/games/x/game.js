@@ -94,21 +94,21 @@ const config = {
     }
 }; Object.seal(config);
 
-let gameRules = {}; 
+let gameRules = {};
 let recommendedImages = [];
 
 // İlk olarak kuralları ve görselleri alır
 Promise.all([
-  fetch('/api/score/rules').then(res => res.json()),
-  fetch('/api/product/recommendedImages').then(res => res.json())
+    fetch('/api/score/rules').then(res => res.json()),
+    fetch('/api/product/recommendedImages').then(res => res.json())
 ])
-.then(([rules, images]) => {
-  gameRules = rules;
-  recommendedImages = images;
+    .then(([rules, images]) => {
+        gameRules = rules;
+        recommendedImages = images;
 
-  // Oyun başlat
-  new Phaser.Game(config);
-});
+        // Oyun başlat
+        new Phaser.Game(config);
+    });
 
 
 
@@ -130,7 +130,7 @@ const _dS1 = (() => {
     };
 
     const addCoin = () => {
-        if (coins < 40) {
+        if (coins < 30) {
             coins++;
             addScore(10);
         }
@@ -510,11 +510,11 @@ function create() {
     //fizik eklemeleri
     this.physics.add.overlap(player, coins, collectCoin, null, this);
 
-   this.physics.add.overlap(player, trophy, () => {
-    _dS1.internalCollectTrophy();
-    _dS1.updateScoreText();
-    showVictoryScreen(this);
-});
+    this.physics.add.overlap(player, trophy, () => {
+        _dS1.internalCollectTrophy();
+        _dS1.updateScoreText();
+        showVictoryScreen(this);
+    });
 
     this.physics.add.overlap(player, enemies, handleEnemyCollision, null, this);
 
@@ -558,6 +558,9 @@ function create() {
             }
         });
     }
+    this.lastBirdSpawnY = null;
+    this.lastAlienSpawnY = null;
+    this.lastUfoSpawnY = null
 }
 
 function update() {
@@ -596,7 +599,7 @@ function update() {
             lastPlatformType = "breaking";
         }
 
-        if (Phaser.Math.Between(1, 10) <= 4) {
+        if (Phaser.Math.Between(1, 10) <= 4.2) {
             addCoin(this);
         }
     }
@@ -696,30 +699,39 @@ function update() {
     }
 
 
-    // bird
 
-    if (gameActive) {
-        if (gameActive && !inSpaceStage && player.y < cloudSpawnThreshold && Phaser.Math.Between(1, 130) === 1) {
+
+    // KUŞ SPAWN
+    if (gameActive && !inSpaceStage && player.y < cloudSpawnThreshold) {
+        const birdSpawnDistance = 800;
+        if (!this.lastBirdSpawnY || player.y < this.lastBirdSpawnY - birdSpawnDistance) {
+            this.lastBirdSpawnY = player.y;
             spawnBird(this);
         }
     }
 
 
-    // alien
+
+
+
+    // ALIEN SPAWN
     if (gameActive && inSpaceStage && player.y - config.height > victoryY) {
-        if (Phaser.Math.Between(1, 200) === 1) {
+        const alienSpawnDistance = 1000;
+        if (!this.lastAlienSpawnY || player.y < this.lastAlienSpawnY - alienSpawnDistance) {
+            this.lastAlienSpawnY = player.y;
             spawnAlien(this);
         }
     }
 
-    // ufo
-    if (gameActive && player.y - config.height > victoryY) {
-        if (inSpaceStage && Phaser.Math.Between(1, 250) === 1) {
+
+    // UFO SPAWN
+    if (gameActive && inSpaceStage && player.y - config.height > victoryY) {
+        const ufoSpawnDistance = 1400;
+        if (!this.lastUfoSpawnY || player.y < this.lastUfoSpawnY - ufoSpawnDistance) {
+            this.lastUfoSpawnY = player.y;
             spawnUFO(this);
         }
     }
-
-
 }
 
 function addBackground(scene, x, y, texture) {
@@ -1529,26 +1541,26 @@ function showGameOver(scene) {
     const durationMs = GameTimer.getDuration();
 
     // API'ye skor gönderme
-fetch('/api/score/submit', {
-    method: 'POST',
-    headers: {
-        'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-    coins: _dS1.getCollectedCoinCount(),
-    trophy: _dS1.hasTrophy() ? 1 : 0,
-    durationMs: durationMs
+    fetch('/api/score/submit', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            coins: _dS1.getCollectedCoinCount(),
+            trophy: _dS1.hasTrophy() ? 1 : 0,
+            durationMs: durationMs
+        })
     })
-})
-.then(res => res.json())
-.then(data => {
-    console.log('GameOver Sunucu Skor Yanıtı:', data);
-     finalScoreText.setText('SCORE: ' + data.score);
-});
+        .then(res => res.json())
+        .then(data => {
+            console.log('GameOver Sunucu Skor Yanıtı:', data);
+            finalScoreText.setText('SCORE: ' + data.score);
+        });
 
 
     scene.sound.play('gameOverSound');
-    _dS1.reset();        
+    _dS1.reset();
     GameTimer.reset();
 }
 
@@ -1606,24 +1618,24 @@ function showVictoryScreen(scene) {
 
     // Skoru sunucuya bildir
     fetch('/api/score/submit', {
-    method: 'POST',
-    headers: {
-        'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-        coins: _dS1.getCollectedCoinCount(),
-        trophy: _dS1.hasTrophy() ? 1 : 0,
-        durationMs: durationMs
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            coins: _dS1.getCollectedCoinCount(),
+            trophy: _dS1.hasTrophy() ? 1 : 0,
+            durationMs: durationMs
+        })
     })
-    })
-    .then(res => res.json())
-    .then(data => {
-    console.log('Sunucu yanıtı:', data);
-    finalScoreText.setText('SCORE: ' + data.score);
-});
+        .then(res => res.json())
+        .then(data => {
+            console.log('Sunucu yanıtı:', data);
+            finalScoreText.setText('SCORE: ' + data.score);
+        });
 
-    _dS1.reset();        
-    GameTimer.reset(); 
+    _dS1.reset();
+    GameTimer.reset();
 
     // Restart button
     let restartButton = scene.add.image(
@@ -1810,13 +1822,13 @@ function createUI() {
     scorePanel.setScrollFactor(0);
     scorePanel.setDepth(1000);
 
-   let scoreTextObj = this.add.text(155, 38, "0", {
-    fontSize: '22px',
-    fontFamily: 'monospace',
-    fill: '#ffffff',
-    stroke: '#ff0000',
-    strokeThickness: 2
-});
+    let scoreTextObj = this.add.text(155, 38, "0", {
+        fontSize: '22px',
+        fontFamily: 'monospace',
+        fill: '#ffffff',
+        stroke: '#ff0000',
+        strokeThickness: 2
+    });
     scoreTextObj.setOrigin(0.5);
     scoreTextObj.setScrollFactor(0);
     scoreTextObj.setDepth(1001);
@@ -2165,8 +2177,8 @@ function createStartScreen(scene) {
         if (isPopupOpen) return; // zaten açıksa işlem yapma
 
         isPopupOpen = true;
-        
-        GameTimer.reset(); 
+
+        GameTimer.reset();
 
         // Play a satisfying zoom effect on all elements
         scene.tweens.add({
