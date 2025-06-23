@@ -28,6 +28,23 @@ class StartScene extends Phaser.Scene {
     }
 
     create() {
+
+        // Oyunun başlangıcında (StartScene içinde) sessionToken alınır:
+        fetch('/api/gamey/rules')
+            .then(res => res.json())
+            .then(data => {
+                this.sessionToken = data.sessionToken;
+                this.recommendedImages = data.recommendedImages;
+                this.difficultyLevels = data.difficultyLevels;
+                this.difficultySettings = data.difficultyConfig;
+                this.finalScoreTrigger = data.finalScoreTrigger;
+            })
+            .catch(err => {
+                console.error("Kurallar alınamadı:", err);
+                this.add.text(100, 100, "Sunucuya bağlanılamadı!", { fontSize: '24px', fill: 'red' });
+            });
+
+
         (function () {
             let triggered = false;
             let safeCheckCount = 0;
@@ -253,7 +270,13 @@ class StartScene extends Phaser.Scene {
                         duration: 500,
                         onComplete: () => {
                             ScoreManager.reset();
-                            this.scene.start('GameScene', { images: this.recommendedImages });
+                            this.scene.start('GameScene', {
+                                images: this.recommendedImages,
+                                sessionToken: this.sessionToken,
+                                difficultyLevels: this.difficultyLevels,
+                                difficultySettings: this.difficultySettings,
+                                finalScoreTrigger: this.finalScoreTrigger
+                            });
                         }
                     });
                 }
@@ -337,7 +360,7 @@ const ScoreManager = (() => {
         },
 
         addCoin: function () {
-            if (coins < 30) {
+            if (coins < 40) {
                 coins++;
                 score += 5;
                 if (scoreText) scoreText.setText(score.toString());
@@ -363,6 +386,9 @@ const ScoreManager = (() => {
     };
 })();
 
+const BOMB_SCALE = 0.15;
+const ICE_SCALE = 0.05;
+const HEART_SCALE = 0.05;
 // ------------------- Game Scene -------------------
 class GameScene extends Phaser.Scene {
     constructor() {
@@ -371,6 +397,17 @@ class GameScene extends Phaser.Scene {
 
     init(data) {
         this.recommendedImages = data.images || [];
+        this.sessionToken = data.sessionToken;
+        this.difficultyLevels = data.difficultyLevels || [];
+        this.difficultySettings = data.difficultySettings || {};
+        if (typeof data.finalScoreTrigger === 'number') {
+            this.finalScoreTrigger = data.finalScoreTrigger;
+        } else {
+            console.error("Sunucudan finalScoreTrigger alınamadı, oyun başlatılamaz.");
+            this.scene.start('StartScene');
+            return;
+        }
+
     }
 
     preload() {
@@ -412,7 +449,12 @@ class GameScene extends Phaser.Scene {
         this.heartSound = this.sound.add('heart-sound');
 
 
-
+        this.spawnStats = {
+            bombs: 0,
+            iceCubes: 0,
+            hearts: 0,
+            totalHeartsCollected: 0
+        };
 
         // Değişkenler
         this.ground;
@@ -568,10 +610,6 @@ class GameScene extends Phaser.Scene {
             this.heartIcons.push(heart);
         }
 
-        // İlk zorluk seviyesini ayarla
-        this.setDifficulty('easy');
-
-
         // BUNU KALDIR SONRA 
         this.input.keyboard.on('keydown-W', () => {
             this.scene.start('WinScene', { score: 1234 });
@@ -581,8 +619,23 @@ class GameScene extends Phaser.Scene {
             this.scene.start('GameOverScene', { score: 100 });
         });
 
-    }
+        this.time.addEvent({
+            delay: 10000,
+            loop: true,
+            callback: () => {
+                fetch('/api/score/validateState', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        elapsedTime: ScoreManager.getElapsedTimeMs(),
+                        stats: this.spawnStats
+                    })
+                });
+            }
+        });
+        this.setDifficulty('easy');
 
+    }
 
     update(time, delta) {
         if (!this.gameActive) return;
@@ -598,50 +651,56 @@ class GameScene extends Phaser.Scene {
 
         this.lastPlayerX = this.player.x;
 
-        // Zorluk ayarı
-        if (ScoreManager.getScore() < 20) {
-            this.setDifficulty('easy');
-        }
-        else if (ScoreManager.getScore() < 45) {
-            this.setDifficulty('medium');
-        }
-        else if (ScoreManager.getScore() < 70) {
-            this.setDifficulty('hard');
-        }
-        else if (ScoreManager.getScore() < 95) {
-            this.setDifficulty('veryhard');
-        }
-        else if (ScoreManager.getScore() >= 120) {
+        // Dinamik zorluk geçişi (sunucudan gelen difficultyLevels ile)
+        let currentScore = ScoreManager.getScore();
+        let elapsedTime = ScoreManager.getElapsedTimeMs();
+
+        if (currentScore >= this.finalScoreTrigger && this.currentDifficulty !== 'final') {
+            this.setDifficulty('final');
             this.clearScreen();
-            this.trophy.setVelocityY(200);
+            this.time.delayedCall(1000, () => {
+                this.trophy.setVelocityY(200);
+            }, null, this);
+
+        } else {
+            for (let i = this.difficultyLevels.length - 1; i >= 0; i--) {
+                if (currentScore >= this.difficultyLevels[i].score) {
+                    const level = this.difficultyLevels[i].level;
+                    if (this.currentDifficulty !== level) {
+                        this.setDifficulty(level);
+                    }
+                    break;
+                }
+            }
+
         }
+
 
         // Item spawn etme
-        this.itemSpawnTimer += delta;
-        if (this.itemSpawnTimer >= this.itemSpawnInterval) {
-            this.addItem();
-            this.itemSpawnTimer = 0;
-        }
+        if (this.currentDifficulty !== 'final') {
+            this.itemSpawnTimer += delta;
+            if (this.itemSpawnTimer >= this.itemSpawnInterval) {
+                this.addItem();
+                this.itemSpawnTimer = 0;
+            }
 
-        // Bomb spawn etme
-        this.bombSpawnTimer += delta;
-        if (this.bombSpawnTimer >= this.bombSpawnInterval) {
-            this.addBomb();
-            this.bombSpawnTimer = 0;
-        }
+            this.bombSpawnTimer += delta;
+            if (this.bombSpawnTimer >= this.bombSpawnInterval) {
+                this.addBomb();
+                this.bombSpawnTimer = 0;
+            }
 
-        // Kalp spawn etme
-        this.heartSpawnTimer += delta;
-        if (this.heartSpawnTimer >= this.heartSpawnInterval) {
-            this.addHeart();
-            this.heartSpawnTimer = 0;
-        }
+            this.heartSpawnTimer += delta;
+            if (this.heartSpawnTimer >= this.heartSpawnInterval) {
+                this.addHeart();
+                this.heartSpawnTimer = 0;
+            }
 
-        // Buz küpü spawn etme
-        this.iceCubeSpawnTimer += delta;
-        if (this.iceCubeSpawnTimer >= this.iceCubeSpawnInterval) {
-            this.addIceCube();
-            this.iceCubeSpawnTimer = 0;
+            this.iceCubeSpawnTimer += delta;
+            if (this.iceCubeSpawnTimer >= this.iceCubeSpawnInterval) {
+                this.addIceCube();
+                this.iceCubeSpawnTimer = 0;
+            }
         }
 
         // Kaçırılan itemleri yok et
@@ -709,47 +768,58 @@ class GameScene extends Phaser.Scene {
 
     }
 
-    submitScoreToServer() {
+    async submitScoreToServer() {
+        const elapsedSeconds = Math.floor(ScoreManager.getElapsedTimeMs() / 1000);
+        const totalCoins = ScoreManager.getCoins();
+        if (totalCoins > elapsedSeconds) return { score: 0 };
+
         const payload = {
-            coins: ScoreManager.getCoins(),
+            coins: totalCoins,
             trophy: ScoreManager.hasTrophy() ? 1 : 0,
-            durationMs: ScoreManager.getElapsedTimeMs()
+            durationMs: ScoreManager.getElapsedTimeMs(),
+            stats: this.spawnStats,
+            sessionToken: this.sessionToken,
+            difficulty: this.currentDifficulty
         };
 
-        return fetch('/api/score/submit', {
+        const res = await fetch('/api/gamey/submit', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
-        }).then(res => res.json());
+        });
+
+        return await res.json();
     }
+
+
+
 
 
     addBomb() {
         let x = Phaser.Math.Between(50, config.width - 50);
         let y = Phaser.Math.Between(-100, -300);
         let bomb = this.bombs.create(x, y, 'bomb');
-        bomb.setScale(0.15);
+        bomb.setScale(BOMB_SCALE);
         bomb.setAngularVelocity(Phaser.Math.Between(-150, 150));
+        this.spawnStats.bombs++;
     }
 
     addHeart() {
         let x = Phaser.Math.Between(50, config.width - 50);
         let y = Phaser.Math.Between(-100, -300);
         let heart = this.hearts.create(x, y, 'heart');
-        heart.setScale(0.05);
+        heart.setScale(HEART_SCALE);
         heart.setAngularVelocity(Phaser.Math.Between(-150, 150));
-
+        this.spawnStats.hearts++;
     }
 
     addIceCube() {
         let x = Phaser.Math.Between(50, config.width - 50);
         let y = Phaser.Math.Between(-100, -300);
         let iceCube = this.iceCubes.create(x, y, 'ice-cube');
-        iceCube.setScale(0.05);
+        iceCube.setScale(ICE_SCALE);
         iceCube.setAngularVelocity(Phaser.Math.Between(-150, 150));
-
+        this.spawnStats.iceCubes++;
     }
 
     clearScreen() {
@@ -857,7 +927,7 @@ class GameScene extends Phaser.Scene {
     collectHeart(player, heart) {
         if (this.heartsLeft < 3) {
             this.heartsLeft++;
-
+            this.spawnStats.totalHeartsCollected++;
             let heartIndex = this.heartsLeft - 1;
             this.heartIcons[heartIndex].setVisible(true);
 
@@ -872,51 +942,32 @@ class GameScene extends Phaser.Scene {
     }
 
     setDifficulty(difficulty) {
-        // şu anki zorluk seviyesini sakla
-        if (this.currentDifficulty === difficulty) {
-            return; // Zaten aynı zorluk seviyesindeyse değiştirme
-        }
+        if (!this.difficultySettings) return;
+        if (this.currentDifficulty === difficulty) return;
 
         this.currentDifficulty = difficulty;
+        const settings = this.difficultySettings[difficulty];
+        if (!settings) return;
 
-        switch (difficulty) {
-            case 'easy':
-                this.itemSpawnInterval = 4000;
-                this.bombSpawnInterval = 2000;
-                this.heartSpawnInterval = 30000;
-                this.iceCubeSpawnInterval = 5000;
-                break;
-            case 'medium':
-                this.itemSpawnInterval = 3000;
-                this.bombSpawnInterval = 1500;
-                this.heartSpawnInterval = 30000;
-                this.iceCubeSpawnInterval = 4500;
-                break;
-            case 'hard':
-                this.itemSpawnInterval = 2000;
-                this.bombSpawnInterval = 1000;
-                this.heartSpawnInterval = 20000;
-                this.iceCubeSpawnInterval = 3500;
-                break;
-            case 'veryhard':
-                this.itemSpawnInterval = 2000;
-                this.bombSpawnInterval = 750;
-                this.heartSpawnInterval = 15000;
-                this.iceCubeSpawnInterval = 3500;
-                break;
-            default:
-                this.itemSpawnInterval = 3000;
-                this.bombSpawnInterval = 1500;
-                this.heartSpawnInterval = 30000;
-                this.iceCubeSpawnInterval = 4500;
-        }
+        this.itemSpawnInterval = settings.itemSpawn;
+        this.bombSpawnInterval = settings.bombSpawn;
+        this.heartSpawnInterval = settings.heartSpawn;
+        this.iceCubeSpawnInterval = settings.iceSpawn;
+
+        this.itemSpawnTimer = 0;
+        this.bombSpawnTimer = 0;
+        this.heartSpawnTimer = 0;
+        this.iceCubeSpawnTimer = 0;
     }
+
 
     winGame(player, trophy) {
         trophy.destroy();
         this.gameActive = false;
         player.setTint(0x00ff00);
         this.victorySound.play();
+        
+         ScoreManager.collectTrophy();
 
         this.submitScoreToServer().then(response => {
             const verifiedScore = response.score || 0;

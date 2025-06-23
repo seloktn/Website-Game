@@ -79,7 +79,7 @@ class StartScene extends Phaser.Scene {
         buttonTween.resume();
     });
 
-    //ÖNEMLİ: Start butonuna tıklama sadece API verisi geldikten sonra tanımlanıyor
+    
     fetch('/api/product/recommendedImages')
         .then(res => res.json())
         .then(images => {
