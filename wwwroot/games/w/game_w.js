@@ -16,82 +16,82 @@ class StartScene extends Phaser.Scene {
     }
 
     create() {
-    this.recommendedImages = [];
+        this.recommendedImages = [];
 
-    this.background = this.add.image(config.width / 2, config.height / 2, 'start');
+        this.background = this.add.image(config.width / 2, config.height / 2, 'start');
 
-    // SES BUTONU
-    this.isSoundOn = true;
-    this.soundButton = this.add.image(config.width - 50, 50, 'sound-on');
-    this.soundButton.setDepth(10);
-    this.soundButton.setOrigin(0.5);
-    this.soundButton.setScale(0.15);
-    this.soundButton.setInteractive({ useHandCursor: true });
+        // SES BUTONU
+        this.isSoundOn = true;
+        this.soundButton = this.add.image(config.width - 50, 50, 'sound-on');
+        this.soundButton.setDepth(10);
+        this.soundButton.setOrigin(0.5);
+        this.soundButton.setScale(0.15);
+        this.soundButton.setInteractive({ useHandCursor: true });
 
-    this.soundButton.on('pointerdown', () => {
-        this.isSoundOn = !this.isSoundOn;
+        this.soundButton.on('pointerdown', () => {
+            this.isSoundOn = !this.isSoundOn;
 
-        if (this.isSoundOn) {
-            this.soundButton.setTexture('sound-on');
-            this.sound.mute = false;
-        } else {
-            this.soundButton.setTexture('sound-off');
-            this.sound.mute = true;
-        }
-    });
-
-    // Glow efekti
-    let glowGraphics = this.add.graphics();
-    glowGraphics.fillStyle(0xffff00, 0.1);
-    glowGraphics.fillRect(0, 0, 1000, 600);
-
-    this.tweens.add({
-        targets: glowGraphics,
-        alpha: { from: 0.1, to: 0.2 },
-        duration: 1500,
-        yoyo: true,
-        repeat: -1
-    });
-
-    // Buton (ilk başta işlevsiz)
-    let startButton = this.add.image(config.width / 2, config.width / 2 + 50, 'start-button');
-    startButton.setScale(0.4);
-    startButton.setInteractive({ useHandCursor: true });
-    startButton.setDepth(2);
-
-    // Pulse efekt
-    let buttonTween = this.tweens.add({
-        targets: [startButton],
-        scaleX: { from: startButton.scaleX, to: startButton.scaleX * 1.1 },
-        scaleY: { from: startButton.scaleY, to: startButton.scaleY * 1.1 },
-        duration: 800,
-        yoyo: true,
-        repeat: -1
-    });
-
-    startButton.on('pointerover', () => {
-        startButton.setScale(0.45);
-        buttonTween.pause();
-    });
-
-    startButton.on('pointerout', () => {
-        startButton.setScale(0.4);
-        buttonTween.resume();
-    });
-
-    
-    fetch('/api/product/recommendedImages')
-        .then(res => res.json())
-        .then(images => {
-            this.recommendedImages = images;
-
-            startButton.on('pointerdown', () => {
-                startButton.disableInteractive();
-                startButton.setVisible(false);
-                this.scene.start('GameScene', { images: this.recommendedImages });
-            });
+            if (this.isSoundOn) {
+                this.soundButton.setTexture('sound-on');
+                this.sound.mute = false;
+            } else {
+                this.soundButton.setTexture('sound-off');
+                this.sound.mute = true;
+            }
         });
-}
+
+        // Glow efekti
+        let glowGraphics = this.add.graphics();
+        glowGraphics.fillStyle(0xffff00, 0.1);
+        glowGraphics.fillRect(0, 0, 1000, 600);
+
+        this.tweens.add({
+            targets: glowGraphics,
+            alpha: { from: 0.1, to: 0.2 },
+            duration: 1500,
+            yoyo: true,
+            repeat: -1
+        });
+
+        // Buton (ilk başta işlevsiz)
+        let startButton = this.add.image(config.width / 2, config.width / 2 + 50, 'start-button');
+        startButton.setScale(0.4);
+        startButton.setInteractive({ useHandCursor: true });
+        startButton.setDepth(2);
+
+        // Pulse efekt
+        let buttonTween = this.tweens.add({
+            targets: [startButton],
+            scaleX: { from: startButton.scaleX, to: startButton.scaleX * 1.1 },
+            scaleY: { from: startButton.scaleY, to: startButton.scaleY * 1.1 },
+            duration: 800,
+            yoyo: true,
+            repeat: -1
+        });
+
+        startButton.on('pointerover', () => {
+            startButton.setScale(0.45);
+            buttonTween.pause();
+        });
+
+        startButton.on('pointerout', () => {
+            startButton.setScale(0.4);
+            buttonTween.resume();
+        });
+
+
+        fetch('/api/product/recommendedImages')
+            .then(res => res.json())
+            .then(images => {
+                this.recommendedImages = images;
+
+                startButton.on('pointerdown', () => {
+                    startButton.disableInteractive();
+                    startButton.setVisible(false);
+                    this.scene.start('GameScene', { images: this.recommendedImages });
+                });
+            });
+    }
 
 }
 
@@ -143,13 +143,22 @@ class GameScene extends Phaser.Scene {
             this.scene.start('GameOverScene');
         });
 
+        this.startTime = Date.now();
+
         this.itemSpawnInterval = 1000; // item spawn aralığı
         this.itemSpawnTimer = 0;
         this.bombSpawnInterval = 2000; // 2 saniyede bir bomba spawn etme
         this.bombSpawnTimer = 0;
 
         this.hearts = 3; // Oyuncunun canı
-
+        this.arrowsFired = 0;
+        this.spawnedItems = 0;
+        this.spawnedBombs = 0;
+        this.spawnedTrophy = 0;
+        this.itemsHit = 0;
+        this.bombsHit = 0;
+        this.didWin = false;
+        this.durationMs = 0;
 
         this.physics.world.setBounds(0, 0, config.width, config.height); // Oyun alanının sınırlarını ayarla
 
@@ -535,6 +544,7 @@ class GameScene extends Phaser.Scene {
         arrow.body.setCircle(275, 275);
         arrow.body.setOffset(0, 0); // Görselin içine göre konumu ayarla
         arrow.setVelocity(x, y);
+        this.arrowsFired++;
     }
 
     // Item ekleme
@@ -568,6 +578,7 @@ class GameScene extends Phaser.Scene {
             item.setScale(0.2);
             item.body.setAllowGravity(false);
             item.setVelocityY(velocity);
+            this.spawnedItems++;
         };
 
         if (!this.textures.exists(imageName) && !this.loadedImageKeys.has(imageName)) {
@@ -614,6 +625,7 @@ class GameScene extends Phaser.Scene {
         bomb.setAngularVelocity(Phaser.Math.Between(-100, 100)); // Bombanın rastgele dönmesini sağla
         bomb.body.setAllowGravity(false); // Bombaların yerçekimi etkisi olmasın
         bomb.setVelocityY(velocity);
+        this.spawnedBombs++;
     }
 
     // Iteme vurma işlemi
@@ -626,12 +638,14 @@ class GameScene extends Phaser.Scene {
         if (this.score >= 500) {
             this.handleGameWin();
         }
+        this.itemsHit++;
     }
 
     //bomba vurma işlemi
     hitBomb(arrow, bomb) {
         bomb.destroy(); // Bombayı yok et
         arrow.destroy(); // Okun kendisini yok et
+        this.bombsHit++;
 
         if (this.hearts > 0) {
             this.hearts--; // Canı azalt
@@ -675,7 +689,20 @@ class GameScene extends Phaser.Scene {
             this.gameActive = false;
             this.clearScreen();
             this.sound.stopAll();
-            this.scene.start('GameOverScene', { finalScore: this.score });
+            // GameScene içinde, oyun bittiği anda:
+            this.scene.start('GameOverScene', {
+                sessionToken: 'abc123',
+                score: this.score,
+                arrowsFired: this.arrowsFired,
+                spawnedItems: this.spawnedItems,
+                spawnedBombs: this.spawnedBombs,
+                spawnedTrophy: this.spawnedTrophy,
+                itemsHit: this.itemsHit,
+                bombsHit: this.bombsHit,
+                heartsLeft: this.hearts,
+                won: this.didWin,
+                durationMs: Date.now() - this.startTime
+            });
         }
     }
 
@@ -686,6 +713,8 @@ class GameScene extends Phaser.Scene {
     }
 
     handleGameWin() {
+        this.didWin = true;
+        this.spawnedTrophy = 1;
         // 1) Anında beyazı “yak”
         this.fadeRect.alpha = 1;
 
@@ -762,17 +791,49 @@ class GameOverScene extends Phaser.Scene {
     }
 
     create(data) {
-        let finalScore = data.finalScore || 0;
+        // 1) Payload’dan alanları al
+        const {
+            sessionToken,
+            score,
+            arrowsFired,
+            spawnedItems,
+            spawnedBombs,
+            spawnedTrophy,
+            itemsHit,
+            bombsHit,
+            heartsLeft,
+            won,
+            durationMs
+        } = data;
 
-
-
+        // 2) Fetch ile server’a gönder
+        fetch('/api/gamew/submit-score', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                sessionToken,
+                score,
+                arrowsFired,
+                spawnedItems,
+                spawnedBombs,
+                spawnedTrophy,
+                itemsHit,
+                bombsHit,
+                heartsLeft,
+                won,
+                durationMs
+            })
+        })
+            .then(r => { if (!r.ok) throw new Error('Skor gönderilemedi'); return r.json(); })
+            .then(j => console.log('✅ Skor gönderildi:', j))
+            .catch(e => console.error('❌ Gönderme hatası:', e));
         // "Game Over" Yazısı
         this.gameOverText = this.add.image(this.game.config.width / 2, config.height / 2 - 200, 'game-over')
         this.gameOverText.setOrigin(0.5, 0.5);
         this.gameOverText.setScale(0.75);
 
         //skor yazısı
-        this.FinalScoreText = this.add.text(config.width / 2, config.height / 2 + 120, 'Score : ' + finalScore, {
+        this.FinalScoreText = this.add.text(config.width / 2, config.height / 2 + 120, 'Score : ' + score, {
             fontSize: '50px',
             fontWeight: 'bold',
             fill: '#d00000',
@@ -809,9 +870,9 @@ class GameOverScene extends Phaser.Scene {
             buttonTween.resume();
         });
 
-        startButton.on('pointerdown', () => {
-            startButton.disableInteractive();
-            startButton.setVisible(false);
+        restartButton.on('pointerdown', () => {
+            restartButton.disableInteractive();
+            restartButton.setVisible(false);
             this.scene.start('GameScene', { images: this.recommendedImages });
         });
 
