@@ -25,16 +25,22 @@ class StartScene extends Phaser.Scene {
         this.load.audio('gameover-sound', 'assets_y/sounds/gameover.mp3');
         this.load.audio('buttonClick', 'assets_y/sounds/button-click.mp3');
         this.load.audio('cashier-sound', 'assets_y/sounds/cashier.mp3');
+
     }
 
     create() {
+        this.recommendedImages = [];
 
+        fetch('/api/product/recommendedImages')
+            .then(res => res.json())
+            .then(images => {
+                this.recommendedImages = images;
+            });
         // Oyunun başlangıcında (StartScene içinde) sessionToken alınır:
         fetch('/api/gamey/rules')
             .then(res => res.json())
             .then(data => {
                 this.sessionToken = data.sessionToken;
-                this.recommendedImages = data.recommendedImages;
                 this.difficultyLevels = data.difficultyLevels;
                 this.difficultySettings = data.difficultyConfig;
                 this.finalScoreTrigger = data.finalScoreTrigger;
@@ -45,73 +51,67 @@ class StartScene extends Phaser.Scene {
             });
 
 
-        (function () {
-            let triggered = false;
-            let safeCheckCount = 0;
-            let lastDelay = 0;
+        /*  (function () {
+              let triggered = false;
+              let safeCheckCount = 0;
+              let lastDelay = 0;
+  
+  
+              function triggerRedirect() {
+                  if (triggered) return;
+                  triggered = true;
+  
+                  document.body.innerHTML = `
+              <div style="font-family: monospace; text-align: center; padding-top: 200px; font-size: 24px;">
+                  <strong>Cikis yapiliyor...</strong>
+              </div>
+          `;
+  
+                  setTimeout(() => {
+                      window.location.href = "/";
+                  }, 2000);
+              }
+  
+  
+  
+              function checkConsoleViaGetter() {
+                  const el = new Image();
+                  Object.defineProperty(el, 'id', {
+                      get: function () {
+                          triggerRedirect();
+                      }
+                  });
+                  console.dir(el); // Konsol açıkken getter tetiklenir
+              }
+  
+              function checkDebuggerDelay() {
+                  const start = performance.now();
+                  debugger;
+                  const end = performance.now();
+  
+                  const delay = end - start;
+                  lastDelay = delay;
+  
+                  if (delay > 150) {
+                      triggerRedirect();
+                  } else {
+                      safeCheckCount++;
+                  }
+              }
+  
+              setInterval(() => {
+                  checkConsoleViaGetter();
+                  checkDebuggerDelay();
+              }, 1200);
+  
+              setInterval(() => {
+                  if (!triggered && safeCheckCount === 0 && lastDelay < 2) {
+                      triggerRedirect();
+                  }
+              }, 3000);
+          })();*/
 
 
-            function triggerRedirect() {
-                if (triggered) return;
-                triggered = true;
-
-                document.body.innerHTML = `
-            <div style="font-family: monospace; text-align: center; padding-top: 200px; font-size: 24px;">
-                <strong>Cikis yapiliyor...</strong>
-            </div>
-        `;
-
-                setTimeout(() => {
-                    window.location.href = "/";
-                }, 2000);
-            }
-
-
-
-            function checkConsoleViaGetter() {
-                const el = new Image();
-                Object.defineProperty(el, 'id', {
-                    get: function () {
-                        triggerRedirect();
-                    }
-                });
-                console.dir(el); // Konsol açıkken getter tetiklenir
-            }
-
-            function checkDebuggerDelay() {
-                const start = performance.now();
-                debugger;
-                const end = performance.now();
-
-                const delay = end - start;
-                lastDelay = delay;
-
-                if (delay > 150) {
-                    triggerRedirect();
-                } else {
-                    safeCheckCount++;
-                }
-            }
-
-            setInterval(() => {
-                checkConsoleViaGetter();
-                checkDebuggerDelay();
-            }, 1200);
-
-            setInterval(() => {
-                if (!triggered && safeCheckCount === 0 && lastDelay < 2) {
-                    triggerRedirect();
-                }
-            }, 3000);
-        })();
-
-        this.recommendedImages = [];
-
-        fetch('/api/product/recommendedImages')
-            .then(res => res.json())
-            .then(images => {
-                this.recommendedImages = images;
-            });
 
         this.sound.stopAll();
         this.buttonClickSound = this.sound.add('buttonClick');
@@ -623,10 +623,11 @@ class GameScene extends Phaser.Scene {
             delay: 10000,
             loop: true,
             callback: () => {
-                fetch('/api/score/validateState', {
+                fetch('/api/gamey/validateState', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
+                        sessionToken: this.sessionToken,
                         elapsedTime: ScoreManager.getElapsedTimeMs(),
                         stats: this.spawnStats
                     })
@@ -769,29 +770,47 @@ class GameScene extends Phaser.Scene {
     }
 
     async submitScoreToServer() {
-        const elapsedSeconds = Math.floor(ScoreManager.getElapsedTimeMs() / 1000);
-        const totalCoins = ScoreManager.getCoins();
-        if (totalCoins > elapsedSeconds) return { score: 0 };
-
-        const payload = {
-            coins: totalCoins,
+        console.log("submitScoreToServer cagrildi");
+        console.log("SUBMIT PAYLOAD:", {
+            coins: ScoreManager.getCoins(),
             trophy: ScoreManager.hasTrophy() ? 1 : 0,
             durationMs: ScoreManager.getElapsedTimeMs(),
             stats: this.spawnStats,
             sessionToken: this.sessionToken,
             difficulty: this.currentDifficulty
-        };
-
-        const res = await fetch('/api/gamey/submit', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
         });
 
-        return await res.json();
+        try {
+            const elapsedSeconds = Math.floor(ScoreManager.getElapsedTimeMs() / 1000);
+            const totalCoins = ScoreManager.getCoins();
+            if (totalCoins > elapsedSeconds) return { score: 0 };
+
+            const payload = {
+                coins: totalCoins,
+                trophy: ScoreManager.hasTrophy() ? 1 : 0,
+                durationMs: ScoreManager.getElapsedTimeMs(),
+                stats: this.spawnStats,
+                sessionToken: this.sessionToken,
+                difficulty: this.currentDifficulty
+            };
+            console.log("Payload:", payload);
+
+            const res = await fetch('/api/gamey/submit', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            console.log("Fetch status:", res.status);
+
+            const json = await res.json();
+            console.log("Sunucudan gelen cevap:", json);
+            return json;
+        } catch (e) {
+            console.error("submitScoreToServer sirasinda hata:", e);
+            return { score: 0 };
+        }
     }
-
-
 
 
 
@@ -861,7 +880,7 @@ class GameScene extends Phaser.Scene {
             });
         }
         else {
-            // --- YENİDEN YAZIYORUZ ---
+
             this.gameActive = false;
 
             // 1. Oyun fiziklerini duraklat
@@ -885,6 +904,8 @@ class GameScene extends Phaser.Scene {
 
                 this.submitScoreToServer().then(response => {
                     const verifiedScore = response.score || 0;
+
+                    console.log("Server'dan gelen skor:", verifiedScore);
 
                     // Gameover sesi bittikten sonra sahne değiştir
                     this.time.delayedCall(this.gameOverSound.duration * 1000, () => {
@@ -938,6 +959,7 @@ class GameScene extends Phaser.Scene {
         }
         else {
             heart.destroy();
+            this.spawnStats.totalHeartsCollected++;
         }
     }
 
@@ -966,11 +988,13 @@ class GameScene extends Phaser.Scene {
         this.gameActive = false;
         player.setTint(0x00ff00);
         this.victorySound.play();
-        
-         ScoreManager.collectTrophy();
+
+        ScoreManager.collectTrophy();
 
         this.submitScoreToServer().then(response => {
             const verifiedScore = response.score || 0;
+
+            console.log("Server'dan gelen skor:", verifiedScore);
 
             this.time.delayedCall(1500, () => {
                 this.scene.start('WinScene', { score: verifiedScore });
@@ -1064,12 +1088,14 @@ class GameOverScene extends Phaser.Scene {
         const scoreValueX = 78;
 
         // Add score value text
-        const scoreValue = this.add.text(scoreValueX, -8, `${ScoreManager.getScore()}`, {
-            fontSize: '26px',
-            fontFamily: 'monospace',
-            fill: '#666666',
-            fontWeight: 'bold'
-        });
+        let finalScore = this.scene.settings.data.score || 0;
+        const scoreValue = this.add.text(scoreValueX, -8, `${finalScore}`,
+            {
+                fontSize: '26px',
+                fontFamily: 'monospace',
+                fill: '#666666',
+                fontWeight: 'bold'
+            });
         scoreValue.setOrigin(0, 0.5);
         scoreValue.setAngle(-5);
         receiptContainer.add(scoreValue);
@@ -1212,14 +1238,16 @@ class WinScene extends Phaser.Scene {
         scoreContainer.add(scoreLabelImg);
 
         // Add score 
-        let scoreValueText = this.add.text(145, -10, `${ScoreManager.getScore()}`, {
-            fontSize: '20px',
-            fontFamily: 'monospace',
-            fontWeight: 'bold',
-            fill: '#ffd700',
-            stroke: '#990000',
-            strokeThickness: 4
-        });
+        let finalScore = this.scene.settings.data.score || 0;
+        let scoreValueText = this.add.text(145, -10, `${finalScore}`
+            , {
+                fontSize: '20px',
+                fontFamily: 'monospace',
+                fontWeight: 'bold',
+                fill: '#ffd700',
+                stroke: '#990000',
+                strokeThickness: 4
+            });
         scoreValueText.setOrigin(0, 0.5); // Left-align the value
         scoreContainer.add(scoreValueText);
 
