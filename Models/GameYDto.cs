@@ -5,28 +5,43 @@ namespace ECommerceGameSite.Models
     public class GameYScoreSubmissionDto
     {
         public string? SessionToken { get; set; }
+
+        [JsonPropertyName("coins")]
         public int Coins { get; set; }
         public int Trophy { get; set; }
         public long DurationMs { get; set; }
         public SpawnStats? Stats { get; set; }
         public string? Difficulty { get; set; }
     }
-
     public class GameStateSnapshot
     {
         public string? SessionToken { get; set; }
         public long ElapsedTime { get; set; }
         public SpawnStats? Stats { get; set; }
-    }
 
+        [JsonPropertyName("coins")]
+        public int Coins { get; set; }
+    }
     public class SpawnStats
     {
+        [JsonPropertyName("coins")]
+        public int Coins { get; set; }
+        
         public int Bombs { get; set; }
         public int IceCubes { get; set; }
         public int Hearts { get; set; }
         public int TotalHeartsCollected { get; set; }
+
+        // Yeni eklenen sensor verileri:
+        public int SensorBombHits { get; set; }
+        public int SensorIceHits { get; set; }
+        public int SensorHeartHits { get; set; }
+        public int SensorCoinHits { get; set; }
+
+        // İstersen ekstra güvenlik için client'tan gelen boyut verilerini de kontrol edebilirsin:
+        public double BombScale { get; set; }
+        public double IceCubeScale { get; set; }
     }
-    
     public static class ScoreValidator
     {
         public static bool IsValid(GameYScoreSubmissionDto payload, int finalScoreTrigger)
@@ -38,7 +53,7 @@ namespace ECommerceGameSite.Models
             if (payload.Trophy > 0 && payload.Coins < 40) return false;
             if (payload.Stats == null) return false;
             if (payload.Stats.Bombs < seconds / 3) return false;
-            if (payload.Stats.IceCubes < seconds / 3) return false;
+            if (payload.Stats.IceCubes < seconds / 5) return false;
             if (payload.Stats.TotalHeartsCollected > seconds / 10) return false;
 
             if (!string.IsNullOrWhiteSpace(payload.Difficulty))
@@ -76,12 +91,11 @@ namespace ECommerceGameSite.Models
             return true;
         }
     }
-
     public class GameYRulesDto
     {
         [JsonPropertyName("sessionToken")]
         public string? SessionToken { get; set; }
-        
+
         [JsonPropertyName("difficultyLevels")]
         public object[]? DifficultyLevels { get; set; }
 

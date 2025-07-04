@@ -450,11 +450,19 @@ class GameScene extends Phaser.Scene {
 
 
         this.spawnStats = {
+            coins: 0,
             bombs: 0,
             iceCubes: 0,
             hearts: 0,
-            totalHeartsCollected: 0
+            totalHeartsCollected: 0,
+            sensorBombHits: 0,
+            sensorIceHits: 0,
+            sensorHeartHits: 0,
+            sensorCoinHits: 0,
+            bombScale: BOMB_SCALE,
+            iceCubeScale: ICE_SCALE
         };
+
 
         // Değişkenler
         this.ground;
@@ -525,6 +533,12 @@ class GameScene extends Phaser.Scene {
 
         // Player ile zemin arasında çarpışma oluşturma
         this.physics.add.collider(this.player, this.ground);
+        // Invisible sensor çizgisi (üstten 10px aşağıda)
+        this.sensorZone = this.physics.add.staticImage(this.sys.game.config.width / 2, 10, null)
+            .setDisplaySize(this.sys.game.config.width, 5)
+            .setVisible(false) // gözükmeyecek
+            .refreshBody();
+
 
         // Buz kırılma efekti (başta görünmesin)
         this.iceBreakEffect = this.add.image(this.player.x, this.player.y, 'ice-break');
@@ -631,7 +645,17 @@ class GameScene extends Phaser.Scene {
                         elapsedTime: ScoreManager.getElapsedTimeMs(),
                         stats: this.spawnStats
                     })
-                });
+                })
+                    .then(res => res.json())
+                    .then(response => {
+                        if (response.valid === false) {
+                            console.warn("Sunucu geçersiz oyun durumu döndürdü. Oyun bitiriliyor.");
+                            this.forceGameOver("Oyun durumu geçersiz.");
+                        }
+                    })
+                    .catch(err => {
+                        console.error("validateState sırasında hata:", err);
+                    });
             }
         });
         this.setDifficulty('easy');
@@ -753,22 +777,39 @@ class GameScene extends Phaser.Scene {
             this.load.once('filecomplete-image-' + imageName, () => {
                 let item = this.items.create(x, y, imageName);
                 item.setScale(0.12);
+
+                item.hasBeenCounted = false;
+                this.physics.add.overlap(item, this.sensorZone, () => {
+                    if (!item.hasBeenCounted) {
+                        item.hasBeenCounted = true;
+                        this.spawnStats.sensorCoinHits++;
+                    }
+                });
             });
             this.load.start();
         } else {
             let item = this.items.create(x, y, imageName);
             item.setScale(0.12);
-        }
-    }
 
+            item.hasBeenCounted = false;
+            this.physics.add.overlap(item, this.sensorZone, () => {
+                if (!item.hasBeenCounted) {
+                    item.hasBeenCounted = true;
+                    this.spawnStats.sensorCoinHits++;
+                }
+            });
+        }
+
+    }
 
     collectCoin(player, item) {
-        item.destroy();
-        this.coinSound.play();
-        ScoreManager.addCoin();
-
+        if (!item.collected && item.hasBeenCounted) {
+            item.collected = true;
+            item.destroy();
+            this.coinSound.play();
+            ScoreManager.addCoin();
+        }
     }
-
     async submitScoreToServer() {
         console.log("submitScoreToServer cagrildi");
         console.log("SUBMIT PAYLOAD:", {
@@ -821,6 +862,14 @@ class GameScene extends Phaser.Scene {
         bomb.setScale(BOMB_SCALE);
         bomb.setAngularVelocity(Phaser.Math.Between(-150, 150));
         this.spawnStats.bombs++;
+        //Sensor çizgisine çarpınca 1 kez sayılacak
+        bomb.hasBeenCounted = false;
+        this.physics.add.overlap(bomb, this.sensorZone, () => {
+            if (!bomb.hasBeenCounted) {
+                this.spawnStats.sensorBombHits++;
+                bomb.hasBeenCounted = true;
+            }
+        });
     }
 
     addHeart() {
@@ -830,6 +879,15 @@ class GameScene extends Phaser.Scene {
         heart.setScale(HEART_SCALE);
         heart.setAngularVelocity(Phaser.Math.Between(-150, 150));
         this.spawnStats.hearts++;
+
+        heart.hasBeenCounted = false;
+        this.physics.add.overlap(heart, this.sensorZone, () => {
+            if (!heart.hasBeenCounted) {
+                this.spawnStats.sensorHeartHits++;
+                heart.hasBeenCounted = true;
+            }
+        });
+
     }
 
     addIceCube() {
@@ -839,6 +897,15 @@ class GameScene extends Phaser.Scene {
         iceCube.setScale(ICE_SCALE);
         iceCube.setAngularVelocity(Phaser.Math.Between(-150, 150));
         this.spawnStats.iceCubes++;
+
+        iceCube.hasBeenCounted = false;
+        this.physics.add.overlap(iceCube, this.sensorZone, () => {
+            if (!iceCube.hasBeenCounted) {
+                this.spawnStats.sensorIceHits++;
+                iceCube.hasBeenCounted = true;
+            }
+        });
+
     }
 
     clearScreen() {
@@ -946,20 +1013,18 @@ class GameScene extends Phaser.Scene {
     }
 
     collectHeart(player, heart) {
-        if (this.heartsLeft < 3) {
-            this.heartsLeft++;
+        if (!heart.collected && heart.hasBeenCounted) {
+            heart.collected = true;
+
+            if (this.heartsLeft < 3) {
+                this.heartsLeft++;
+                let heartIndex = this.heartsLeft - 1;
+                this.heartIcons[heartIndex].setVisible(true);
+            }
+
             this.spawnStats.totalHeartsCollected++;
-            let heartIndex = this.heartsLeft - 1;
-            this.heartIcons[heartIndex].setVisible(true);
-
             heart.destroy();
-
-            // Kalp sesi çal
             this.heartSound.play();
-        }
-        else {
-            heart.destroy();
-            this.spawnStats.totalHeartsCollected++;
         }
     }
 
@@ -980,6 +1045,23 @@ class GameScene extends Phaser.Scene {
         this.bombSpawnTimer = 0;
         this.heartSpawnTimer = 0;
         this.iceCubeSpawnTimer = 0;
+    }
+    forceGameOver(reason = "") {
+        this.gameActive = false;
+        this.physics.pause();
+        this.input.enabled = false;
+        this.player.setTint(0xff0000);
+        this.gameOverSound.play();
+
+        console.warn("Oyun geçersiz sayıldı: " + reason);
+
+        this.submitScoreToServer().then(response => {
+            const verifiedScore = response.score || 0;
+
+            this.time.delayedCall(this.gameOverSound.duration * 1000, () => {
+                this.scene.start('GameOverScene', { score: verifiedScore });
+            });
+        });
     }
 
 

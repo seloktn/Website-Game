@@ -17,7 +17,7 @@ namespace ECommerceGameSite.Controllers
             var rules = new GameYRulesDto
             {
                 SessionToken = sessionToken,
-                
+
                 DifficultyLevels = new[]
                 {
                     new { score = 0, level = "easy" },
@@ -49,11 +49,39 @@ namespace ECommerceGameSite.Controllers
             {
                 return Unauthorized();
             }
-
-            if (snapshot.Stats == null || snapshot.Stats.Bombs < snapshot.ElapsedTime / 10000)
+            // Sensor tabanlı güvenlik kontrolleri
+            if (snapshot.Stats == null ||
+                snapshot.Stats.Bombs < snapshot.ElapsedTime / 10000 ||                    // Orijinal kontrol
+                snapshot.Stats.Bombs < snapshot.Stats.SensorBombHits ||                  // Bomba sahnesine girmeden sayıldı mı?
+                snapshot.Stats.IceCubes < snapshot.Stats.SensorIceHits ||                // Ice sahneye girmeden mi geldi?
+                snapshot.Stats.Hearts < snapshot.Stats.SensorHeartHits ||               // Kalpler gerçekten sahneye girdi mi?
+                snapshot.Stats.TotalHeartsCollected > snapshot.Stats.SensorHeartHits || // Toplanan kalp, sahneye girenden fazla mı?
+                snapshot.Coins > snapshot.Stats.SensorCoinHits                    // Toplanan coin, sahneye girenden fazla mı?
+                )
+            {
                 return Ok(new { valid = false });
+            }
 
             return Ok(new { valid = true });
+        }
+        [HttpPost("submit")]
+        public IActionResult SubmitScore([FromBody] GameYScoreSubmissionDto submission)
+        {
+            var ip = NormalizeIp(HttpContext.Connection.RemoteIpAddress?.ToString() ?? "");
+
+            if (string.IsNullOrWhiteSpace(submission.SessionToken) ||
+                !TokenServiceY.ValidateToken(submission.SessionToken, ip))
+            {
+                return Unauthorized();
+            }
+
+            bool isValid = ScoreValidator.IsValid(submission, 200); // 200 → finalScoreTrigger
+
+            int finalScore = isValid
+                ? submission.Coins * 5 + (submission.Trophy > 0 ? 50 : 0)
+                : 0;
+
+            return Ok(new { score = finalScore });
         }
         private static string NormalizeIp(string? ip)
         {
