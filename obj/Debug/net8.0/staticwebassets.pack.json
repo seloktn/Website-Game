@@ -13,6 +13,42 @@
       "PackagePath": "staticwebassets\\favicon.ico"
     },
     {
+      "Id": "C:\\Users\\okano\\ECommerceGameSite\\wwwroot\\games\\w\\assets_w\\audio\\background-music.mp3",
+      "PackagePath": "staticwebassets\\games\\w\\assets_w\\audio\\background-music.mp3"
+    },
+    {
+      "Id": "C:\\Users\\okano\\ECommerceGameSite\\wwwroot\\games\\w\\assets_w\\audio\\button-click.mp3",
+      "PackagePath": "staticwebassets\\games\\w\\assets_w\\audio\\button-click.mp3"
+    },
+    {
+      "Id": "C:\\Users\\okano\\ECommerceGameSite\\wwwroot\\games\\w\\assets_w\\audio\\coin.mp3",
+      "PackagePath": "staticwebassets\\games\\w\\assets_w\\audio\\coin.mp3"
+    },
+    {
+      "Id": "C:\\Users\\okano\\ECommerceGameSite\\wwwroot\\games\\w\\assets_w\\audio\\explosion.mp3",
+      "PackagePath": "staticwebassets\\games\\w\\assets_w\\audio\\explosion.mp3"
+    },
+    {
+      "Id": "C:\\Users\\okano\\ECommerceGameSite\\wwwroot\\games\\w\\assets_w\\audio\\game-over.mp3",
+      "PackagePath": "staticwebassets\\games\\w\\assets_w\\audio\\game-over.mp3"
+    },
+    {
+      "Id": "C:\\Users\\okano\\ECommerceGameSite\\wwwroot\\games\\w\\assets_w\\audio\\level-complete.mp3",
+      "PackagePath": "staticwebassets\\games\\w\\assets_w\\audio\\level-complete.mp3"
+    },
+    {
+      "Id": "C:\\Users\\okano\\ECommerceGameSite\\wwwroot\\games\\w\\assets_w\\audio\\lightning.mp3",
+      "PackagePath": "staticwebassets\\games\\w\\assets_w\\audio\\lightning.mp3"
+    },
+    {
+      "Id": "C:\\Users\\okano\\ECommerceGameSite\\wwwroot\\games\\w\\assets_w\\audio\\shoot.mp3",
+      "PackagePath": "staticwebassets\\games\\w\\assets_w\\audio\\shoot.mp3"
+    },
+    {
+      "Id": "C:\\Users\\okano\\ECommerceGameSite\\wwwroot\\games\\w\\assets_w\\audio\\victory.mp3",
+      "PackagePath": "staticwebassets\\games\\w\\assets_w\\audio\\victory.mp3"
+    },
+    {
       "Id": "C:\\Users\\okano\\ECommerceGameSite\\wwwroot\\games\\w\\assets_w\\background\\background-space.png",
       "PackagePath": "staticwebassets\\games\\w\\assets_w\\background\\background-space.png"
     },
@@ -61,44 +97,20 @@
       "PackagePath": "staticwebassets\\games\\w\\assets_w\\poison.png"
     },
     {
-      "Id": "C:\\Users\\okano\\ECommerceGameSite\\wwwroot\\games\\w\\assets_w\\sounds\\backgroundMusic.mp3",
-      "PackagePath": "staticwebassets\\games\\w\\assets_w\\sounds\\backgroundMusic.mp3"
-    },
-    {
-      "Id": "C:\\Users\\okano\\ECommerceGameSite\\wwwroot\\games\\w\\assets_w\\sounds\\bomb.mp3",
-      "PackagePath": "staticwebassets\\games\\w\\assets_w\\sounds\\bomb.mp3"
-    },
-    {
-      "Id": "C:\\Users\\okano\\ECommerceGameSite\\wwwroot\\games\\w\\assets_w\\sounds\\button-click.mp3",
-      "PackagePath": "staticwebassets\\games\\w\\assets_w\\sounds\\button-click.mp3"
-    },
-    {
-      "Id": "C:\\Users\\okano\\ECommerceGameSite\\wwwroot\\games\\w\\assets_w\\sounds\\coin.mp3",
-      "PackagePath": "staticwebassets\\games\\w\\assets_w\\sounds\\coin.mp3"
-    },
-    {
-      "Id": "C:\\Users\\okano\\ECommerceGameSite\\wwwroot\\games\\w\\assets_w\\sounds\\gameover.mp3",
-      "PackagePath": "staticwebassets\\games\\w\\assets_w\\sounds\\gameover.mp3"
-    },
-    {
-      "Id": "C:\\Users\\okano\\ECommerceGameSite\\wwwroot\\games\\w\\assets_w\\sounds\\heart.mp3",
-      "PackagePath": "staticwebassets\\games\\w\\assets_w\\sounds\\heart.mp3"
-    },
-    {
-      "Id": "C:\\Users\\okano\\ECommerceGameSite\\wwwroot\\games\\w\\assets_w\\sounds\\victory.mp3",
-      "PackagePath": "staticwebassets\\games\\w\\assets_w\\sounds\\victory.mp3"
-    },
-    {
       "Id": "C:\\Users\\okano\\ECommerceGameSite\\wwwroot\\games\\w\\assets_w\\trophy.png",
       "PackagePath": "staticwebassets\\games\\w\\assets_w\\trophy.png"
     },
     {
-      "Id": "C:\\Users\\okano\\ECommerceGameSite\\wwwroot\\games\\w\\assets_w\\ui\\game-over.png",
-      "PackagePath": "staticwebassets\\games\\w\\assets_w\\ui\\game-over.png"
+      "Id": "C:\\Users\\okano\\ECommerceGameSite\\wwwroot\\games\\w\\assets_w\\ui\\gameover-screen.png",
+      "PackagePath": "staticwebassets\\games\\w\\assets_w\\ui\\gameover-screen.png"
     },
     {
       "Id": "C:\\Users\\okano\\ECommerceGameSite\\wwwroot\\games\\w\\assets_w\\ui\\heart.png",
       "PackagePath": "staticwebassets\\games\\w\\assets_w\\ui\\heart.png"
+    },
+    {
+      "Id": "C:\\Users\\okano\\ECommerceGameSite\\wwwroot\\games\\w\\assets_w\\ui\\howToBtn.png",
+      "PackagePath": "staticwebassets\\games\\w\\assets_w\\ui\\howToBtn.png"
     },
     {
       "Id": "C:\\Users\\okano\\ECommerceGameSite\\wwwroot\\games\\w\\assets_w\\ui\\restart-green.png",
@@ -137,8 +149,8 @@
       "PackagePath": "staticwebassets\\games\\w\\assets_w\\ui\\start.png"
     },
     {
-      "Id": "C:\\Users\\okano\\ECommerceGameSite\\wwwroot\\games\\w\\assets_w\\ui\\win.png",
-      "PackagePath": "staticwebassets\\games\\w\\assets_w\\ui\\win.png"
+      "Id": "C:\\Users\\okano\\ECommerceGameSite\\wwwroot\\games\\w\\assets_w\\ui\\win-screen.png",
+      "PackagePath": "staticwebassets\\games\\w\\assets_w\\ui\\win-screen.png"
     },
     {
       "Id": "C:\\Users\\okano\\ECommerceGameSite\\wwwroot\\games\\w\\assets_w\\wizard.png",
@@ -195,6 +207,10 @@
     {
       "Id": "C:\\Users\\okano\\ECommerceGameSite\\wwwroot\\games\\x\\assets\\coin.png",
       "PackagePath": "staticwebassets\\games\\x\\assets\\coin.png"
+    },
+    {
+      "Id": "C:\\Users\\okano\\ECommerceGameSite\\wwwroot\\games\\x\\assets\\game-over-player.png",
+      "PackagePath": "staticwebassets\\games\\x\\assets\\game-over-player.png"
     },
     {
       "Id": "C:\\Users\\okano\\ECommerceGameSite\\wwwroot\\games\\x\\assets\\ground.png",
@@ -257,8 +273,16 @@
       "PackagePath": "staticwebassets\\games\\x\\assets\\sounds\\ufo.mp3"
     },
     {
+      "Id": "C:\\Users\\okano\\ECommerceGameSite\\wwwroot\\games\\x\\assets\\sounds\\uh-oh.mp3",
+      "PackagePath": "staticwebassets\\games\\x\\assets\\sounds\\uh-oh.mp3"
+    },
+    {
       "Id": "C:\\Users\\okano\\ECommerceGameSite\\wwwroot\\games\\x\\assets\\sounds\\win.mp3",
       "PackagePath": "staticwebassets\\games\\x\\assets\\sounds\\win.mp3"
+    },
+    {
+      "Id": "C:\\Users\\okano\\ECommerceGameSite\\wwwroot\\games\\x\\assets\\start-player.png",
+      "PackagePath": "staticwebassets\\games\\x\\assets\\start-player.png"
     },
     {
       "Id": "C:\\Users\\okano\\ECommerceGameSite\\wwwroot\\games\\x\\assets\\trophy.png",
@@ -329,8 +353,48 @@
       "PackagePath": "staticwebassets\\games\\x\\assets\\ui\\victory_text_space.png"
     },
     {
-      "Id": "C:\\Users\\okano\\ECommerceGameSite\\wwwroot\\games\\x\\game.js",
-      "PackagePath": "staticwebassets\\games\\x\\game.js"
+      "Id": "C:\\Users\\okano\\ECommerceGameSite\\wwwroot\\games\\x\\js\\dist\\game.bundle.js",
+      "PackagePath": "staticwebassets\\games\\x\\js\\dist\\game.bundle.js"
+    },
+    {
+      "Id": "C:\\Users\\okano\\ECommerceGameSite\\wwwroot\\games\\x\\js\\dist\\game.bundle.js.map",
+      "PackagePath": "staticwebassets\\games\\x\\js\\dist\\game.bundle.js.map"
+    },
+    {
+      "Id": "C:\\Users\\okano\\ECommerceGameSite\\wwwroot\\games\\x\\js\\dist\\integrity.json",
+      "PackagePath": "staticwebassets\\games\\x\\js\\dist\\integrity.json"
+    },
+    {
+      "Id": "C:\\Users\\okano\\ECommerceGameSite\\wwwroot\\games\\x\\js\\dist\\tamperCheck.js",
+      "PackagePath": "staticwebassets\\games\\x\\js\\dist\\tamperCheck.js"
+    },
+    {
+      "Id": "C:\\Users\\okano\\ECommerceGameSite\\wwwroot\\games\\x\\js\\package-lock.json",
+      "PackagePath": "staticwebassets\\games\\x\\js\\package-lock.json"
+    },
+    {
+      "Id": "C:\\Users\\okano\\ECommerceGameSite\\wwwroot\\games\\x\\js\\package.json",
+      "PackagePath": "staticwebassets\\games\\x\\js\\package.json"
+    },
+    {
+      "Id": "C:\\Users\\okano\\ECommerceGameSite\\wwwroot\\games\\x\\js\\scripts\\gen-integrity.js",
+      "PackagePath": "staticwebassets\\games\\x\\js\\scripts\\gen-integrity.js"
+    },
+    {
+      "Id": "C:\\Users\\okano\\ECommerceGameSite\\wwwroot\\games\\x\\js\\scripts\\update-sri.sh",
+      "PackagePath": "staticwebassets\\games\\x\\js\\scripts\\update-sri.sh"
+    },
+    {
+      "Id": "C:\\Users\\okano\\ECommerceGameSite\\wwwroot\\games\\x\\js\\src\\game.js",
+      "PackagePath": "staticwebassets\\games\\x\\js\\src\\game.js"
+    },
+    {
+      "Id": "C:\\Users\\okano\\ECommerceGameSite\\wwwroot\\games\\x\\js\\src\\tamperCheck.js",
+      "PackagePath": "staticwebassets\\games\\x\\js\\src\\tamperCheck.js"
+    },
+    {
+      "Id": "C:\\Users\\okano\\ECommerceGameSite\\wwwroot\\games\\x\\js\\src\\utils.js",
+      "PackagePath": "staticwebassets\\games\\x\\js\\src\\utils.js"
     },
     {
       "Id": "C:\\Users\\okano\\ECommerceGameSite\\wwwroot\\games\\x\\start.html",
@@ -485,14 +549,6 @@
       "PackagePath": "staticwebassets\\games\\y\\start_y.html"
     },
     {
-      "Id": "C:\\Users\\okano\\ECommerceGameSite\\wwwroot\\games\\z\\README.md",
-      "PackagePath": "staticwebassets\\games\\z\\README.md"
-    },
-    {
-      "Id": "C:\\Users\\okano\\ECommerceGameSite\\wwwroot\\games\\z\\assets_z\\2121121.png",
-      "PackagePath": "staticwebassets\\games\\z\\assets_z\\2121121.png"
-    },
-    {
       "Id": "C:\\Users\\okano\\ECommerceGameSite\\wwwroot\\games\\z\\assets_z\\cart.png",
       "PackagePath": "staticwebassets\\games\\z\\assets_z\\cart.png"
     },
@@ -511,10 +567,6 @@
     {
       "Id": "C:\\Users\\okano\\ECommerceGameSite\\wwwroot\\games\\z\\assets_z\\cone.png",
       "PackagePath": "staticwebassets\\games\\z\\assets_z\\cone.png"
-    },
-    {
-      "Id": "C:\\Users\\okano\\ECommerceGameSite\\wwwroot\\games\\z\\assets_z\\ground.png",
-      "PackagePath": "staticwebassets\\games\\z\\assets_z\\ground.png"
     },
     {
       "Id": "C:\\Users\\okano\\ECommerceGameSite\\wwwroot\\games\\z\\assets_z\\old.png",
@@ -591,10 +643,6 @@
     {
       "Id": "C:\\Users\\okano\\ECommerceGameSite\\wwwroot\\games\\z\\assets_z\\ui\\howTo_button.png",
       "PackagePath": "staticwebassets\\games\\z\\assets_z\\ui\\howTo_button.png"
-    },
-    {
-      "Id": "C:\\Users\\okano\\ECommerceGameSite\\wwwroot\\games\\z\\assets_z\\ui\\oyna-1.png.png",
-      "PackagePath": "staticwebassets\\games\\z\\assets_z\\ui\\oyna-1.png.png"
     },
     {
       "Id": "C:\\Users\\okano\\ECommerceGameSite\\wwwroot\\games\\z\\assets_z\\ui\\oyna.png",

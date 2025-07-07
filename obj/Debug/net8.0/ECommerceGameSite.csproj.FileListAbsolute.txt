@@ -1,11 +1,3 @@
-C:\Users\okano\ECommerceGameSite\bin\Debug\net8.0\appsettings.Development.json
-C:\Users\okano\ECommerceGameSite\bin\Debug\net8.0\appsettings.json
-C:\Users\okano\ECommerceGameSite\bin\Debug\net8.0\ECommerceGameSite.staticwebassets.runtime.json
-C:\Users\okano\ECommerceGameSite\bin\Debug\net8.0\ECommerceGameSite.exe
-C:\Users\okano\ECommerceGameSite\bin\Debug\net8.0\ECommerceGameSite.deps.json
-C:\Users\okano\ECommerceGameSite\bin\Debug\net8.0\ECommerceGameSite.runtimeconfig.json
-C:\Users\okano\ECommerceGameSite\bin\Debug\net8.0\ECommerceGameSite.dll
-C:\Users\okano\ECommerceGameSite\bin\Debug\net8.0\ECommerceGameSite.pdb
 C:\Users\okano\ECommerceGameSite\obj\Debug\net8.0\ECommerceGameSite.GeneratedMSBuildEditorConfig.editorconfig
 C:\Users\okano\ECommerceGameSite\obj\Debug\net8.0\ECommerceGameSite.AssemblyInfoInputs.cache
 C:\Users\okano\ECommerceGameSite\obj\Debug\net8.0\ECommerceGameSite.AssemblyInfo.cs
@@ -14,6 +6,14 @@ C:\Users\okano\ECommerceGameSite\obj\Debug\net8.0\ECommerceGameSite.MvcApplicati
 C:\Users\okano\ECommerceGameSite\obj\Debug\net8.0\ECommerceGameSite.RazorAssemblyInfo.cache
 C:\Users\okano\ECommerceGameSite\obj\Debug\net8.0\ECommerceGameSite.RazorAssemblyInfo.cs
 C:\Users\okano\ECommerceGameSite\obj\Debug\net8.0\ECommerceGameSite.sourcelink.json
+C:\Users\okano\ECommerceGameSite\bin\Debug\net8.0\appsettings.Development.json
+C:\Users\okano\ECommerceGameSite\bin\Debug\net8.0\appsettings.json
+C:\Users\okano\ECommerceGameSite\bin\Debug\net8.0\ECommerceGameSite.staticwebassets.runtime.json
+C:\Users\okano\ECommerceGameSite\bin\Debug\net8.0\ECommerceGameSite.exe
+C:\Users\okano\ECommerceGameSite\bin\Debug\net8.0\ECommerceGameSite.deps.json
+C:\Users\okano\ECommerceGameSite\bin\Debug\net8.0\ECommerceGameSite.runtimeconfig.json
+C:\Users\okano\ECommerceGameSite\bin\Debug\net8.0\ECommerceGameSite.dll
+C:\Users\okano\ECommerceGameSite\bin\Debug\net8.0\ECommerceGameSite.pdb
 C:\Users\okano\ECommerceGameSite\obj\Debug\net8.0\staticwebassets.build.json
 C:\Users\okano\ECommerceGameSite\obj\Debug\net8.0\staticwebassets.development.json
 C:\Users\okano\ECommerceGameSite\obj\Debug\net8.0\staticwebassets\msbuild.ECommerceGameSite.Microsoft.AspNetCore.StaticWebAssets.props

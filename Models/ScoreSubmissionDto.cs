@@ -1,7 +1,11 @@
-public class ScoreSubmissionDto
+namespace GameApi.Models
 {
-    public int Coins { get; set; }
-    public int Trophy { get; set; }
-    public long DurationMs { get; set; }  // toplam geçen süre (milisaniye)
-    
-}
+    public class ScoreSubmissionDto
+    {
+        public string? PlayerId { get; set; }
+        public int CoinCount { get; set; }
+        public int TimeMs { get; set; }
+         public int ObstacleCount { get; set; }  // Görülen engel sayısı
+    }
+    }
+

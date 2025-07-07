@@ -1,3 +1,2208 @@
+// 🔐 DEVICE FINGERPRINTING SYSTEM 
+class DeviceFingerprintManager {
+    constructor() {
+        this.fingerprint = null;
+        this.canvasFingerprint = null;
+        this.webglFingerprint = null;
+
+        console.log('🔐 DeviceFingerprintManager initializing...');
+        this.generateDeviceFingerprint();
+    }
+
+    // Canvas fingerprinting - benzersiz canvas çizimi
+    generateCanvasFingerprint() {
+        try {
+            console.log('🎨 Generating canvas fingerprint...');
+
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = 200;
+            canvas.height = 50;
+
+            // Benzersiz çizim pattern'i
+            ctx.textBaseline = 'top';
+            ctx.font = '14px Arial';
+
+            // Arka plan
+            ctx.fillStyle = '#ff6b6b';
+            ctx.fillRect(10, 10, 100, 20);
+
+            // Text layer 1
+            ctx.fillStyle = '#4ecdc4';
+            ctx.fillText('Wizard fingerprint test 🔒', 15, 15);
+
+            // Text layer 2
+            ctx.fillStyle = '#45b7d1';
+            ctx.fillText('Security check ✓', 15, 30);
+
+            const fingerprint = canvas.toDataURL();
+            console.log(`✅ Canvas fingerprint generated (${fingerprint.length} chars)`);
+            return fingerprint;
+
+        } catch (error) {
+            console.warn('⚠️ Canvas fingerprinting failed:', error);
+            return 'canvas_unavailable_' + Date.now();
+        }
+    }
+
+    // WebGL fingerprinting - GPU bilgileri
+    generateWebGLFingerprint() {
+        try {
+            console.log('🖥️ Generating WebGL fingerprint...');
+
+            const canvas = document.createElement('canvas');
+            const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+
+            if (!gl) {
+                console.warn('⚠️ WebGL not available');
+                return 'webgl_unavailable';
+            }
+
+            // GPU bilgilerini topla
+            const info = {
+                vendor: gl.getParameter(gl.VENDOR),
+                renderer: gl.getParameter(gl.RENDERER),
+                version: gl.getParameter(gl.VERSION),
+                shadingLanguageVersion: gl.getParameter(gl.SHADING_LANGUAGE_VERSION)
+            };
+
+            const fingerprint = btoa(JSON.stringify(info)).substring(0, 32);
+            console.log('✅ WebGL fingerprint generated:', fingerprint);
+            return fingerprint;
+
+        } catch (error) {
+            console.warn('⚠️ WebGL fingerprinting failed:', error);
+            return 'webgl_error_' + Date.now();
+        }
+    }
+
+    // Ana device fingerprint oluşturma
+    generateDeviceFingerprint() {
+        console.log('🔐 Generating complete device fingerprint...');
+
+        // Alt sistemleri çalıştır
+        this.canvasFingerprint = this.generateCanvasFingerprint();
+        this.webglFingerprint = this.generateWebGLFingerprint();
+
+        // Tüm device bilgilerini topla
+        this.fingerprint = {
+            userAgent: navigator.userAgent,
+            screenResolution: {
+                width: screen.width,
+                height: screen.height
+            },
+            timezoneOffset: new Date().getTimezoneOffset(),
+            canvasFingerprint: this.canvasFingerprint,
+            webGLFingerprint: this.webglFingerprint,
+            language: navigator.language,
+            platform: navigator.platform,
+            cookieEnabled: navigator.cookieEnabled,
+            localStorage: typeof Storage !== 'undefined',
+            sessionStorage: typeof sessionStorage !== 'undefined',
+            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+        };
+
+        console.log('✅ Complete device fingerprint generated:');
+        console.log('📱 Platform:', this.fingerprint.platform);
+        console.log('📺 Screen:', `${this.fingerprint.screenResolution.width}x${this.fingerprint.screenResolution.height}`);
+        console.log('🌍 Timezone:', this.fingerprint.timezone);
+        console.log('🎨 Canvas length:', this.fingerprint.canvasFingerprint.length);
+        console.log('🖥️ WebGL:', this.fingerprint.webGLFingerprint);
+    }
+
+    // Frontend için fingerprint al
+    getFingerprint() {
+        return this.fingerprint;
+    }
+
+    // Backend için uyumlu format
+    getBackendCompatibleFingerprint() {
+        if (!this.fingerprint) {
+            console.error('❌ Fingerprint not generated yet');
+            return null;
+        }
+
+        return {
+            UserAgent: this.fingerprint.userAgent,
+            ScreenResolution: {
+                Width: this.fingerprint.screenResolution.width,
+                Height: this.fingerprint.screenResolution.height
+            },
+            TimezoneOffset: this.fingerprint.timezoneOffset,
+            CanvasFingerprint: this.fingerprint.canvasFingerprint,
+            WebGLFingerprint: this.fingerprint.webGLFingerprint
+        };
+    }
+
+    // Test metodu
+    testFingerprint() {
+        console.log('🧪 Testing device fingerprint...');
+        console.log('Complete fingerprint:', this.fingerprint);
+        console.log('Backend compatible format:', this.getBackendCompatibleFingerprint());
+
+        return true;
+    }
+}
+
+// Global olarak kullanılabilir hale getir
+window.DeviceFingerprintManager = DeviceFingerprintManager;
+
+// 📸 WIZARD SNAPSHOT PROTECTION SYSTEM
+class WizardSnapshotProtection {
+    constructor(gameScene) {
+        this.scene = gameScene;
+        this.interval = 10000; // 10 saniyede bir
+        this.snapshotCounter = 0;
+        this.isActive = false;
+        this.apiClient = null;
+
+        console.log("📸 Wizard Snapshot Protection initialized");
+    }
+
+    setAPIClient(apiClient) {
+        this.apiClient = apiClient;
+        console.log('🔗 API Client connected to snapshot protection');
+    }
+
+    start() {
+        if (this.isActive) return;
+        this.isActive = true;
+
+        setTimeout(() => {
+            this.startSnapshotLoop();
+        }, 5000); // 5 saniye sonra başla
+
+        console.log(`📸 Snapshot protection started - First snapshot in 5 seconds`);
+    }
+
+    startSnapshotLoop() {
+        if (!this.isActive) return;
+
+        this.captureAndValidateSnapshot();
+
+        setTimeout(() => {
+            this.startSnapshotLoop();
+        }, this.interval);
+    }
+
+    async captureAndValidateSnapshot() {
+        if (!this.scene.gameActive || !this.isActive || !this.apiClient) return;
+
+        try {
+            this.snapshotCounter++;
+            const snapshot = this.captureGameState();
+            console.log(`📸 Capturing snapshot #${this.snapshotCounter}:`, snapshot);
+
+            // İlk permission al
+            await this.apiClient.requestDevicePermission(snapshot);
+
+            // Sonra validate et
+            const response = await this.apiClient.validateSecureAction(snapshot);
+
+            if (!response.success) {
+                console.log("🚨 CHEAT DETECTED by snapshot protection!");
+                console.log(`Reason: ${response.reason}`);
+                console.log(`Cheat Probability: ${response.cheatProbability}%`);
+                this.handleCheatDetection(response);
+            } else {
+                console.log(`✅ Snapshot #${this.snapshotCounter} validated successfully`);
+            }
+
+        } catch (error) {
+            console.error("❌ Snapshot validation error:", error);
+        }
+    }
+
+    captureGameState() {
+        return {
+            score: this.scene.score || 0,
+            hearts: this.scene.hearts || 3,
+            itemsHit: this.scene.itemsHit || 0,
+            bombsHit: this.scene.bombsHit || 0,
+            gameTime: Date.now() - (this.scene.gameStartTime || Date.now())
+        };
+    }
+
+    handleCheatDetection(response) {
+        console.log("🔨 CHEAT DETECTION TRIGGERED");
+        console.log(`Reason: ${response.reason}`);
+        console.log(`Cheat Probability: ${response.cheatProbability}%`);
+
+        this.stop();
+
+        // Oyunu durdur
+        this.scene.gameActive = false;
+
+        // Cheat detection mesajı göster
+        const cheatText = this.scene.add.text(
+            this.scene.scale.width / 2,
+            this.scene.scale.height / 2,
+            `🚨 CHEAT DETECTED 🚨\n\n${response.reason}\n\nProbability: ${response.cheatProbability}%`,
+            {
+                fontSize: '32px',
+                fill: '#ff0000',
+                align: 'center',
+                fontFamily: 'monospace',
+                stroke: '#ffffff',
+                strokeThickness: 2
+            }
+        );
+        cheatText.setOrigin(0.5);
+        cheatText.setDepth(10000);
+
+        // 3 saniye sonra game over
+        setTimeout(() => {
+            this.scene.handleGameOver();
+        }, 3000);
+    }
+
+    stop() {
+        this.isActive = false;
+        console.log("📸 Snapshot Protection stopped");
+    }
+
+    getStatus() {
+        return {
+            isActive: this.isActive,
+            snapshotCount: this.snapshotCounter,
+            interval: this.interval / 1000 + 's'
+        };
+    }
+}
+
+// Global access
+window.WizardSnapshotProtection = WizardSnapshotProtection;
+
+// 🍯 INVISIBLE HONEYPOT DETECTION SYSTEM
+class WizardHoneypot {
+    constructor(gameScene) {
+        this.scene = gameScene;
+        this.invisibleObstacles = new Set();
+        this.expectedCollisions = new Set();
+        this.actualCollisions = new Set();
+        this.suspiciousActivity = [];
+        this.collisionlessCount = 0;
+        this.sessionId = null;
+
+        console.log("🍯 Wizard Honeypot system initialized");
+    }
+
+    setSessionId(sessionId) {
+        this.sessionId = sessionId;
+        console.log(`🍯 Honeypot session set: ${sessionId}`);
+    }
+
+    // Görünmez engel oluştur
+    createInvisibleObstacle(x, y, type = 'invisible') {
+        const obstacleId = `honeypot_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
+
+        console.log(`🍯 Creating invisible obstacle: ${obstacleId} at (${x}, ${y})`);
+
+        // Görünmez obstacle oluştur
+        const invisible = this.scene.add.rectangle(x, y, 40, 60, 0x000000, 0);
+        this.scene.physics.add.existing(invisible);
+        invisible.body.setImmovable(true);
+        invisible.body.allowGravity = false;
+        invisible.setVisible(false); // Görünmez
+
+        invisible.honeypotId = obstacleId;
+        invisible.honeypotType = type;
+        invisible.expectedHit = true;
+        invisible.hasPassed = false;
+
+        // Collision handler ekle
+        this.scene.physics.add.overlap(this.scene.arrows, invisible, (arrow, obstacle) => {
+            console.log(`💥 Honeypot collision: ${obstacle.honeypotId}`);
+            this.onHoneypotCollision(obstacle.honeypotId, obstacle.honeypotType);
+        });
+
+        this.invisibleObstacles.add(invisible);
+        this.expectedCollisions.add(obstacleId);
+
+        console.log(`🍯 Total invisible obstacles: ${this.invisibleObstacles.size}`);
+
+        return invisible;
+    }
+
+    // Strategik honeypot yerleştirme
+    placeStrategicHoneypots() {
+        console.log("🔍 Placing strategic honeypots...");
+
+        if (!this.scene.bombs || !this.scene.items) {
+            console.log("❌ Game objects not ready for honeypot placement");
+            return;
+        }
+
+        // Bombalar ve itemlar arasına honeypot yerleştir
+        const allObjects = [
+            ...this.scene.bombs.children.entries,
+            ...this.scene.items.children.entries
+        ];
+
+        if (allObjects.length < 2) {
+            console.log("⚠️ Not enough objects for honeypot placement");
+            return;
+        }
+
+        let honeypotCount = 0;
+
+        // Random pozisyonlarda honeypot yerleştir
+        for (let i = 0; i < 2; i++) {
+            const x = Phaser.Math.Between(600, 1200);
+            const y = Phaser.Math.Between(200, 600);
+
+            this.createInvisibleObstacle(x, y, 'strategic');
+            honeypotCount++;
+        }
+
+        console.log(`✅ Placed ${honeypotCount} strategic honeypots`);
+    }
+
+    // Honeypot collision tespit edildi
+    onHoneypotCollision(obstacleId, type) {
+        console.log(`💥 Honeypot collision detected: ${obstacleId} (${type})`);
+
+        this.actualCollisions.add(obstacleId);
+        this.collisionlessCount = 0;
+
+        // Suspicious activity kaydet
+        this.suspiciousActivity.push({
+            type: 'honeypot_collision',
+            obstacleId: obstacleId,
+            timestamp: Date.now(),
+            playerPosition: { x: this.scene.player?.x || 0, y: this.scene.player?.y || 0 }
+        });
+
+        // Backend'e bildir
+        this.reportCollisionToServer(obstacleId, 'honeypot_hit');
+
+        // Honeypot'ı temizle
+        this.invisibleObstacles.forEach(obstacle => {
+            if (obstacle.honeypotId === obstacleId) {
+                obstacle.destroy();
+                this.invisibleObstacles.delete(obstacle);
+                console.log(`🧹 Honeypot ${obstacleId} cleaned up after collision`);
+            }
+        });
+    }
+
+    // Server'a collision rapor et
+    async reportCollisionToServer(obstacleId, type) {
+        try {
+            console.log(`📡 Reporting honeypot collision: ${type}`);
+            // Bu endpoint'i henüz backend'e eklemiyoruz, sadece log
+            console.log(`🍯 Honeypot data: ${obstacleId}, Session: ${this.sessionId}`);
+        } catch (error) {
+            console.error("❌ Failed to report honeypot collision:", error);
+        }
+    }
+
+    // Player tracking - arrows takip et
+    trackPlayerArrows() {
+        if (!this.scene.arrows) return;
+
+        this.scene.arrows.children.each((arrow) => {
+            if (arrow && arrow.active) {
+                // Arrow'ların honeypot'larla etkileşimini izle
+                this.invisibleObstacles.forEach(obstacle => {
+                    if (obstacle.active) {
+                        const distance = Phaser.Math.Distance.Between(arrow.x, arrow.y, obstacle.x, obstacle.y);
+                        if (distance < 30 && !obstacle.hasPassed) {
+                            obstacle.hasPassed = true;
+                            console.log(`🎯 Arrow passed near honeypot: ${obstacle.honeypotId}`);
+                        }
+                    }
+                });
+            }
+        });
+    }
+
+    // Cleanup
+    cleanup() {
+        this.invisibleObstacles.forEach(obstacle => {
+            if (obstacle && obstacle.destroy) {
+                obstacle.destroy();
+            }
+        });
+        this.invisibleObstacles.clear();
+        console.log("🧹 Honeypot obstacles cleaned up");
+    }
+
+    // Debug info
+    getStatus() {
+        return {
+            sessionId: this.sessionId,
+            totalInvisibleObstacles: this.invisibleObstacles.size,
+            expectedCollisions: this.expectedCollisions.size,
+            actualCollisions: this.actualCollisions.size,
+            collisionlessCount: this.collisionlessCount,
+            suspiciousActivities: this.suspiciousActivity.length
+        };
+    }
+}
+
+// Global access
+window.WizardHoneypot = WizardHoneypot;
+
+
+// 🌐 WIZARD GAME API CLIENT
+class WizardGameAPI {
+    constructor() {
+        this.baseURL = 'http://localhost:5117/api/wizardgame';
+        this.sessionId = this.generateSessionId();
+        this.deviceFingerprint = null;
+        console.log('🌐 Wizard Game API Client başlatıldı, Session:', this.sessionId);
+
+        // 🔐 Device fingerprinting'i başlat
+        this.initializeDeviceFingerprint();
+        this.initializeTokenSystem();
+    }
+
+    // 🔐 Device fingerprint'i başlat
+    initializeDeviceFingerprint() {
+        try {
+            this.deviceFingerprint = new DeviceFingerprintManager();
+            console.log('✅ Device fingerprint integrated with API client');
+        } catch (error) {
+            console.error('❌ Device fingerprint initialization failed:', error);
+        }
+    }
+
+    initializeTokenSystem() {
+        this.currentToken = null;
+        this.deviceChallenge = null;
+        this.tokenExpiresAt = null;
+        console.log('🎫 Token system initialized');
+    }
+
+    generateSessionId() {
+        return `wizard_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    }
+
+    // 🎮 Oyun konfigürasyonu al
+    async getGameConfig() {
+        try {
+            const response = await fetch(`${this.baseURL}/config`);
+            const data = await response.json();
+            console.log('✅ Game config alındı:', data);
+            return data;
+        } catch (error) {
+            console.error('❌ Config alma hatası:', error);
+            return null;
+        }
+    }
+
+    // 🔍 API durumu kontrol et
+    async getStatus() {
+        try {
+            const response = await fetch(`${this.baseURL}/status`);
+            const data = await response.json();
+            console.log('✅ API Status:', data);
+            return data;
+        } catch (error) {
+            console.error('❌ Status alma hatası:', error);
+            return null;
+        }
+    }
+
+    // 🏹 Ok atışını kaydet
+    async recordArrowShot(velocityX, velocityY) {
+        try {
+            const response = await fetch(`${this.baseURL}/arrow-shot`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    velocityX: velocityX,
+                    velocityY: velocityY,
+                    sessionId: this.sessionId
+                })
+            });
+            const data = await response.json();
+            console.log('🏹 Ok atışı kaydedildi:', data);
+            return data;
+        } catch (error) {
+            console.error('❌ Ok atışı kaydetme hatası:', error);
+            return { success: false };
+        }
+    }
+
+    // 🎯 Item vurma kaydet
+    async recordItemHit(newScore) {
+        try {
+            const response = await fetch(`${this.baseURL}/item-hit`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    newScore: newScore,
+                    sessionId: this.sessionId
+                })
+            });
+            const data = await response.json();
+            console.log('🎯 Item hit kaydedildi:', data);
+            return data;
+        } catch (error) {
+            console.error('❌ Item hit kaydetme hatası:', error);
+            return { success: false };
+        }
+    }
+
+    // 💣 Bomba vurma kaydet
+    async recordBombHit(remainingHearts) {
+        try {
+            const response = await fetch(`${this.baseURL}/bomb-hit`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    remainingHearts: remainingHearts,
+                    sessionId: this.sessionId
+                })
+            });
+            const data = await response.json();
+            console.log('💣 Bomb hit kaydedildi:', data);
+            return data;
+        } catch (error) {
+            console.error('❌ Bomb hit kaydetme hatası:', error);
+            return { success: false };
+        }
+    }
+
+    // 🔐 Device permission iste
+    async requestDevicePermission(gameData) {
+        try {
+            const requestData = {
+                sessionId: this.sessionId,
+                gameData: gameData,
+                deviceFingerprint: this.deviceFingerprint.getBackendCompatibleFingerprint(),
+                timestamp: Date.now()
+            };
+
+            const response = await fetch(`${this.baseURL}/request-device-permission`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(requestData)
+            });
+
+            const data = await response.json();
+
+            if (response.ok && data.success) {
+                this.currentToken = data.permissionToken;
+                this.deviceChallenge = data.deviceChallenge;
+
+                console.log('🔐 Device permission granted');
+                console.log('🎫 Token expires in:', data.expiresIn, 'seconds');
+                return data;
+            } else {
+                console.error('❌ Permission denied:', data.reason);
+                throw new Error(data.reason || 'Permission request failed');
+            }
+        } catch (error) {
+            console.error('🚨 Permission request failed:', error);
+            throw error;
+        }
+    }
+
+    // 🔐 Secure action validate et
+    async validateSecureAction(gameData) {
+        try {
+            const requestData = {
+                sessionId: this.sessionId,
+                permissionToken: this.currentToken,
+                gameData: gameData,
+                deviceFingerprint: this.deviceFingerprint.getBackendCompatibleFingerprint(),
+                timestamp: Date.now()
+            };
+
+            const response = await fetch(`${this.baseURL}/validate-secure-action`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(requestData)
+            });
+
+            const data = await response.json();
+            console.log('🔐 Secure validation response:', data);
+
+            return data;
+        } catch (error) {
+            console.error('❌ Secure validation error:', error);
+            return { success: false, reason: 'Validation failed', error: error.message };
+        }
+    }
+}
+
+// Global API client
+window.wizardAPI = new WizardGameAPI();
+
+// 🔥 REAL-TIME MONITORING SYSTEM
+class WizardRealTimeMonitor {
+    constructor(gameScene) {
+        this.scene = gameScene;
+        this.sessionId = null;
+        this.apiClient = null;
+        this.isActive = false;
+
+        // Monitoring intervals
+        this.validationInterval = 15000; // 15 saniyede bir validation
+        this.activityCheckInterval = 5000; // 5 saniyede bir activity check
+
+        // Data tracking
+        this.lastGameState = null;
+        this.scoreHistory = [];
+        this.actionHistory = [];
+        this.suspiciousEvents = [];
+
+        // Thresholds
+        this.maxScorePerSecond = 15;
+        this.maxActionsPerSecond = 10;
+        this.suspiciousScoreJump = 50;
+
+        console.log('🔥 Real-Time Monitor initialized');
+    }
+
+    setAPIClient(apiClient) {
+        this.apiClient = apiClient;
+        this.sessionId = apiClient.sessionId;
+        console.log('🔗 Real-Time Monitor connected to API');
+    }
+
+    start() {
+        if (this.isActive || !this.apiClient) return;
+
+        this.isActive = true;
+        this.startTime = Date.now();
+
+        // Validation loop başlat
+        setTimeout(() => {
+            this.startValidationLoop();
+        }, this.validationInterval);
+
+        // Activity monitoring loop başlat
+        setTimeout(() => {
+            this.startActivityMonitoringLoop();
+        }, this.activityCheckInterval);
+
+        console.log('🔥 Real-Time Monitoring started');
+        console.log(`📊 Validation every ${this.validationInterval / 1000}s`);
+        console.log(`👁️ Activity check every ${this.activityCheckInterval / 1000}s`);
+    }
+
+    stop() {
+        this.isActive = false;
+        console.log('🔥 Real-Time Monitoring stopped');
+    }
+
+    // Ana validation loop
+    startValidationLoop() {
+        if (!this.isActive) return;
+
+        this.performRealTimeValidation();
+
+        setTimeout(() => {
+            this.startValidationLoop();
+        }, this.validationInterval);
+    }
+
+    // Activity monitoring loop
+    startActivityMonitoringLoop() {
+        if (!this.isActive) return;
+
+        this.checkSuspiciousActivity();
+
+        setTimeout(() => {
+            this.startActivityMonitoringLoop();
+        }, this.activityCheckInterval);
+    }
+
+    // Real-time validation gerçekleştir
+    async performRealTimeValidation() {
+        if (!this.scene.gameActive || !this.apiClient) return;
+
+        try {
+            const currentGameState = this.captureGameState();
+            const gameTimeSeconds = (Date.now() - this.startTime) / 1000;
+
+            const validationData = {
+                sessionId: this.sessionId,
+                currentScore: currentGameState.score,
+                remainingHearts: currentGameState.hearts,
+                itemsHit: currentGameState.itemsHit,
+                bombsHit: currentGameState.bombsHit,
+                gameTimeSeconds: gameTimeSeconds,
+                timestamp: Date.now()
+            };
+
+            console.log('🔥 Performing real-time validation:', validationData);
+
+            const response = await this.apiClient.realTimeValidation(validationData);
+
+            if (!response.success) {
+                console.log('🚨 REAL-TIME VALIDATION FAILED!');
+                console.log(`Reason: ${response.reason}`);
+                console.log(`Cheat Probability: ${response.cheatProbability}%`);
+
+                this.handleValidationFailure(response);
+            } else {
+                console.log(`✅ Real-time validation passed (Trust Score: ${response.trustScore})`);
+            }
+
+        } catch (error) {
+            console.error('❌ Real-time validation error:', error);
+        }
+    }
+
+    // Şüpheli aktivite kontrolü
+    checkSuspiciousActivity() {
+        if (!this.scene.gameActive) return;
+
+        const currentState = this.captureGameState();
+
+        // Skor history'ye ekle
+        this.scoreHistory.push({
+            score: currentState.score,
+            timestamp: Date.now()
+        });
+
+        // Son 10 saniyeyi tut
+        const tenSecondsAgo = Date.now() - 10000;
+        this.scoreHistory = this.scoreHistory.filter(entry => entry.timestamp > tenSecondsAgo);
+
+        // Şüpheli aktiviteleri kontrol et
+        this.detectRapidScoreIncrease();
+        this.detectImpossibleTiming();
+        this.detectPatternAnomalies();
+
+        this.lastGameState = currentState;
+    }
+
+    // Hızlı skor artışı tespiti
+    detectRapidScoreIncrease() {
+        if (this.scoreHistory.length < 2) return;
+
+        const current = this.scoreHistory[this.scoreHistory.length - 1];
+        const previous = this.scoreHistory[this.scoreHistory.length - 2];
+
+        const scoreDiff = current.score - previous.score;
+        const timeDiff = (current.timestamp - previous.timestamp) / 1000;
+
+        if (timeDiff > 0) {
+            const scorePerSecond = scoreDiff / timeDiff;
+
+            if (scorePerSecond > this.maxScorePerSecond) {
+                const severity = Math.min(10, Math.floor(scorePerSecond / 5));
+                this.reportSuspiciousActivity(
+                    'rapid_score_increase',
+                    `Score increased by ${scoreDiff} in ${timeDiff.toFixed(2)}s (${scorePerSecond.toFixed(2)} pts/s)`,
+                    severity
+                );
+            }
+        }
+    }
+
+    // İmkansız timing tespiti
+    detectImpossibleTiming() {
+        const gameTime = (Date.now() - this.startTime) / 1000;
+        const currentScore = this.scene.score || 0;
+
+        // Minimum oyun süresi vs skor kontrolü
+        const minTimeForScore = currentScore / 50; // Maksimum 20 puan/saniye kabul et
+
+        if (gameTime < minTimeForScore && currentScore > 50) {
+            this.reportSuspiciousActivity(
+                'impossible_timing',
+                `Score ${currentScore} achieved in ${gameTime.toFixed(2)}s (min expected: ${minTimeForScore.toFixed(2)}s)`,
+                9
+            );
+        }
+    }
+
+    // Pattern anomalileri tespiti
+    detectPatternAnomalies() {
+        if (this.scoreHistory.length < 5) return;
+
+        // Son 5 skor değişimini al
+        const recent = this.scoreHistory.slice(-5);
+        const scoreChanges = [];
+
+        for (let i = 1; i < recent.length; i++) {
+            const change = recent[i].score - recent[i - 1].score;
+            if (change > 0) scoreChanges.push(change);
+        }
+
+        // Eğer tüm değişimler aynı değerde ise (örn. hep +10)
+        if (scoreChanges.length >= 3) {
+            const allSame = scoreChanges.every(change => change === scoreChanges[0]);
+            const averageChange = scoreChanges.reduce((a, b) => a + b, 0) / scoreChanges.length;
+
+            if (allSame && averageChange >= 30) {
+                this.reportSuspiciousActivity(
+                    'pattern_anomaly',
+                    `Consistent score pattern detected: ${scoreChanges.join(', ')}`,
+                    6
+                );
+            }
+        }
+    }
+
+    // Şüpheli aktiviteyi rapor et
+    async reportSuspiciousActivity(activityType, details, severityLevel) {
+        try {
+            console.log(`🚨 Suspicious activity detected: ${activityType}`);
+            console.log(`📝 Details: ${details}`);
+            console.log(`⚡ Severity: ${severityLevel}/10`);
+
+            const report = {
+                sessionId: this.sessionId,
+                activityType: activityType,
+                details: details,
+                severityLevel: severityLevel,
+                timestamp: Date.now()
+            };
+
+            // Backend'e rapor gönder
+            const response = await this.apiClient.reportSuspiciousActivity(report);
+
+            if (!response.success) {
+                console.log(`🔨 SUSPICIOUS ACTIVITY RESPONSE: ${response.action}`);
+                console.log(`🎯 Cheat Probability: ${response.cheatProbability}%`);
+
+                if (response.action === 'terminate_session') {
+                    this.handleSessionTermination(response);
+                }
+            }
+
+            // Local storage
+            this.suspiciousEvents.push({
+                ...report,
+                response: response
+            });
+
+        } catch (error) {
+            console.error('❌ Failed to report suspicious activity:', error);
+        }
+    }
+
+    // Validation failure handling
+    handleValidationFailure(response) {
+        console.log('🔨 HANDLING VALIDATION FAILURE');
+
+        if (response.action === 'terminate_session') {
+            this.handleSessionTermination(response);
+        } else {
+            // Uyarı göster ama oyunu devam ettir
+            this.showWarning(response.reason);
+        }
+    }
+
+    // Session sonlandırma
+    handleSessionTermination(response) {
+        console.log('💀 TERMINATING SESSION DUE TO CHEAT DETECTION');
+
+        this.stop();
+        this.scene.gameActive = false;
+
+        // Cheat detection mesajı göster
+        const cheatText = this.scene.add.text(
+            this.scene.scale.width / 2,
+            this.scene.scale.height / 2,
+            `🚨 CHEAT DETECTED 🚨\n\n${response.reason}\n\nSession Terminated\nProbability: ${response.cheatProbability}%`,
+            {
+                fontSize: '28px',
+                fill: '#ff0000',
+                align: 'center',
+                fontFamily: 'monospace',
+                stroke: '#ffffff',
+                strokeThickness: 2
+            }
+        );
+        cheatText.setOrigin(0.5);
+        cheatText.setDepth(10000);
+
+        // 3 saniye sonra game over
+        setTimeout(() => {
+            this.scene.handleGameOver();
+        }, 3000);
+    }
+
+    // Uyarı göster
+    showWarning(message) {
+        const warningText = this.scene.add.text(
+            this.scene.scale.width / 2,
+            100,
+            `⚠️ WARNING: ${message}`,
+            {
+                fontSize: '20px',
+                fill: '#ffaa00',
+                align: 'center',
+                fontFamily: 'monospace',
+                stroke: '#000000',
+                strokeThickness: 2
+            }
+        );
+        warningText.setOrigin(0.5);
+        warningText.setDepth(9999);
+
+        // 3 saniye sonra kaybolsun
+        setTimeout(() => {
+            if (warningText && warningText.destroy) {
+                warningText.destroy();
+            }
+        }, 3000);
+    }
+
+    // Oyun durumunu yakala
+    captureGameState() {
+        return {
+            score: this.scene.score || 0,
+            hearts: this.scene.hearts || 3,
+            itemsHit: this.scene.itemsHit || 0,
+            bombsHit: this.scene.bombsHit || 0,
+            gameTime: Date.now() - (this.scene.gameStartTime || Date.now())
+        };
+    }
+
+    // Action kaydet (opsiyonel - detaylı tracking için)
+    recordAction(actionType, data) {
+        this.actionHistory.push({
+            type: actionType,
+            data: data,
+            timestamp: Date.now()
+        });
+
+        // Son 1 dakikayı tut
+        const oneMinuteAgo = Date.now() - 60000;
+        this.actionHistory = this.actionHistory.filter(action => action.timestamp > oneMinuteAgo);
+    }
+
+    // Status bilgisi
+    getStatus() {
+        return {
+            isActive: this.isActive,
+            sessionId: this.sessionId,
+            scoreHistoryLength: this.scoreHistory.length,
+            suspiciousEventsCount: this.suspiciousEvents.length,
+            lastValidation: this.lastValidation || 'Not yet performed',
+            monitoringTime: this.isActive ? Math.floor((Date.now() - this.startTime) / 1000) + 's' : 'Not active'
+        };
+    }
+}
+
+// Global access
+window.WizardRealTimeMonitor = WizardRealTimeMonitor;
+
+// API Client'e yeni metodlar eklenmesi gerekiyor
+// WizardGameAPI sınıfına eklenecek metodlar:
+
+// Real-time validation metodu
+WizardGameAPI.prototype.realTimeValidation = async function (validationData) {
+    try {
+        const response = await fetch(`${this.baseURL}/real-time-validation`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(validationData)
+        });
+
+        const data = await response.json();
+        console.log('🔥 Real-time validation response:', data);
+        return data;
+    } catch (error) {
+        console.error('❌ Real-time validation error:', error);
+        return { success: false, reason: 'Validation failed', error: error.message };
+    }
+};
+
+// Suspicious activity reporting metodu
+WizardGameAPI.prototype.reportSuspiciousActivity = async function (activityData) {
+    try {
+        const response = await fetch(`${this.baseURL}/report-suspicious-activity`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(activityData)
+        });
+
+        const data = await response.json();
+        console.log('🚨 Suspicious activity response:', data);
+        return data;
+    } catch (error) {
+        console.error('❌ Suspicious activity reporting error:', error);
+        return { success: false, reason: 'Reporting failed', error: error.message };
+    }
+};
+
+console.log('🔥 Real-Time Monitoring System loaded and ready!');
+
+// 🛡️ VARIABLE PROTECTION SYSTEM
+class WizardVariableProtection {
+    constructor(gameScene) {
+        this.scene = gameScene;
+        this.isActive = false;
+        this.protectedVars = new Map();
+        this.backupValues = new Map();
+        this.validationInterval = 2000; // 2 saniyede bir kontrol
+        this.suspiciousChanges = [];
+        this.trustScore = 100;
+
+        console.log('🛡️ Variable Protection System initialized');
+    }
+
+    start() {
+        if (this.isActive) return;
+        this.isActive = true;
+
+        // Korunacak değişkenleri tanımla
+        this.setupProtectedVariables();
+
+        // Validation loop başlat
+        this.startValidationLoop();
+
+        console.log('🛡️ Variable Protection ACTIVE');
+        console.log('📊 Protected variables:', Array.from(this.protectedVars.keys()));
+    }
+
+    stop() {
+        this.isActive = false;
+        console.log('🛡️ Variable Protection STOPPED');
+    }
+
+    // Korunacak değişkenleri setup et
+    setupProtectedVariables() {
+        // Ana oyun değişkenleri
+        this.addProtectedVariable('score', () => this.scene.score, 0, 10000);
+        this.addProtectedVariable('hearts', () => this.scene.hearts, 0, 3);
+        this.addProtectedVariable('itemsHit', () => this.scene.itemsHit, 0, 1000);
+        this.addProtectedVariable('bombsHit', () => this.scene.bombsHit, 0, 100);
+        this.addProtectedVariable('gameActive', () => this.scene.gameActive, [true, false]);
+
+        // Başlangıç değerlerini kaydet
+        this.captureBackupValues();
+
+        console.log('🔒 Protected variables setup complete');
+    }
+
+    // Korunacak değişken ekle
+    addProtectedVariable(name, getter, minValue, maxValue) {
+        this.protectedVars.set(name, {
+            getter: getter,
+            minValue: minValue,
+            maxValue: maxValue,
+            lastValue: getter(),
+            changeCount: 0,
+            lastChanged: Date.now()
+        });
+    }
+
+    // Backup değerleri yakala
+    captureBackupValues() {
+        for (let [name, config] of this.protectedVars) {
+            this.backupValues.set(name, config.getter());
+        }
+        console.log('💾 Backup values captured');
+    }
+
+    // Validation loop
+    startValidationLoop() {
+        if (!this.isActive) return;
+
+        this.validateAllVariables();
+
+        setTimeout(() => {
+            this.startValidationLoop();
+        }, this.validationInterval);
+    }
+
+    // Tüm değişkenleri validate et
+    validateAllVariables() {
+        let suspiciousCount = 0;
+
+        for (let [name, config] of this.protectedVars) {
+            const currentValue = config.getter();
+            const result = this.validateVariable(name, currentValue, config);
+
+            if (!result.isValid) {
+                suspiciousCount++;
+                this.handleSuspiciousChange(name, result);
+            }
+
+            // Son değeri güncelle
+            config.lastValue = currentValue;
+        }
+
+        if (suspiciousCount === 0) {
+            console.log('✅ Variable validation passed - All variables secure');
+        }
+    }
+
+    // Tek değişken validate et
+    validateVariable(name, currentValue, config) {
+        const previousValue = config.lastValue;
+
+        // Range kontrolü
+        if (Array.isArray(config.minValue)) {
+            // Allowed values array
+            if (!config.minValue.includes(currentValue)) {
+                return {
+                    isValid: false,
+                    reason: 'invalid_value',
+                    details: `${name}: ${currentValue} not in allowed values ${config.minValue}`,
+                    severity: 9
+                };
+            }
+        } else {
+            // Min/Max range kontrolü
+            if (currentValue < config.minValue || currentValue > config.maxValue) {
+                return {
+                    isValid: false,
+                    reason: 'out_of_range',
+                    details: `${name}: ${currentValue} not in range [${config.minValue}, ${config.maxValue}]`,
+                    severity: 9
+                };
+            }
+        }
+
+        // Rapid change kontrolü (skor için özel)
+        if (name === 'score' && currentValue > previousValue) {
+            const change = currentValue - previousValue;
+            const timeDiff = Date.now() - config.lastChanged;
+
+            if (change > 50 && timeDiff < 1000) {
+                return {
+                    isValid: false,
+                    reason: 'rapid_score_change',
+                    details: `Score increased by ${change} in ${timeDiff}ms`,
+                    severity: 8
+                };
+            }
+        }
+
+        // Impossible negative change (skor geriye gidemez)
+        if (name === 'score' && currentValue < previousValue) {
+            return {
+                isValid: false,
+                reason: 'score_decreased',
+                details: `Score decreased from ${previousValue} to ${currentValue}`,
+                severity: 10
+            };
+        }
+
+        // Heart increase kontrolü (can artamaz)
+        if (name === 'hearts' && currentValue > previousValue) {
+            return {
+                isValid: false,
+                reason: 'heart_increase',
+                details: `Hearts increased from ${previousValue} to ${currentValue}`,
+                severity: 10
+            };
+        }
+
+        // Değişiklik zamanını güncelle
+        if (currentValue !== previousValue) {
+            config.lastChanged = Date.now();
+            config.changeCount++;
+        }
+
+        return { isValid: true };
+    }
+
+    // Şüpheli değişiklik işle
+    async handleSuspiciousChange(variableName, validationResult) {
+        console.log(`🚨 SUSPICIOUS VARIABLE CHANGE DETECTED!`);
+        console.log(`Variable: ${variableName}`);
+        console.log(`Reason: ${validationResult.reason}`);
+        console.log(`Details: ${validationResult.details}`);
+        console.log(`Severity: ${validationResult.severity}/10`);
+
+        // Trust score düşür
+        this.trustScore = Math.max(0, this.trustScore - (validationResult.severity * 5));
+        console.log(`📊 Trust Score decreased to: ${this.trustScore}%`);
+
+        // Suspicious change kaydet
+        const suspiciousChange = {
+            variable: variableName,
+            reason: validationResult.reason,
+            details: validationResult.details,
+            severity: validationResult.severity,
+            timestamp: Date.now(),
+            trustScore: this.trustScore
+        };
+
+        this.suspiciousChanges.push(suspiciousChange);
+
+        // Backend'e rapor et (eğer API client varsa)
+        if (this.scene.api && this.scene.api.reportSuspiciousActivity) {
+            try {
+                await this.scene.api.reportSuspiciousActivity({
+                    sessionId: this.scene.api.sessionId,
+                    activityType: 'variable_tampering',
+                    details: `${variableName}: ${validationResult.details}`,
+                    severityLevel: validationResult.severity,
+                    timestamp: Date.now()
+                });
+            } catch (error) {
+                console.error('❌ Failed to report variable tampering:', error);
+            }
+        }
+
+        // Kritik değişiklik ise oyunu sonlandır
+        if (validationResult.severity >= 10) {
+            this.handleCriticalViolation(suspiciousChange);
+        }
+    }
+
+    // Kritik ihlal işle
+    handleCriticalViolation(suspiciousChange) {
+        console.log('💀 CRITICAL VARIABLE VIOLATION - TERMINATING GAME');
+
+        this.stop();
+        this.scene.gameActive = false;
+
+        // Cheat detection mesajı göster
+        const violationText = this.scene.add.text(
+            this.scene.scale.width / 2,
+            this.scene.scale.height / 2,
+            `🚨 VARIABLE TAMPERING DETECTED 🚨\n\n${suspiciousChange.variable.toUpperCase()}\n${suspiciousChange.details}\n\nGame Terminated`,
+            {
+                fontSize: '24px',
+                fill: '#ff0000',
+                align: 'center',
+                fontFamily: 'monospace',
+                stroke: '#ffffff',
+                strokeThickness: 2
+            }
+        );
+        violationText.setOrigin(0.5);
+        violationText.setDepth(10000);
+
+        // 3 saniye sonra game over
+        setTimeout(() => {
+            this.scene.handleGameOver();
+        }, 3000);
+    }
+
+    // Manual variable check (debug için)
+    checkVariable(variableName) {
+        if (!this.protectedVars.has(variableName)) {
+            console.log(`❌ Variable '${variableName}' is not protected`);
+            return;
+        }
+
+        const config = this.protectedVars.get(variableName);
+        const currentValue = config.getter();
+        const result = this.validateVariable(variableName, currentValue, config);
+
+        console.log(`🔍 Manual check for '${variableName}':`);
+        console.log(`Current value: ${currentValue}`);
+        console.log(`Valid: ${result.isValid}`);
+        if (!result.isValid) {
+            console.log(`Issue: ${result.reason} - ${result.details}`);
+        }
+    }
+
+    // Force restore değişkeni (son çare)
+    forceRestore(variableName) {
+        if (this.backupValues.has(variableName)) {
+            const backupValue = this.backupValues.get(variableName);
+            console.log(`🔄 Force restoring ${variableName} to backup value: ${backupValue}`);
+
+            // Bu işlem oyun-specific implementasyon gerektirir
+            switch (variableName) {
+                case 'score':
+                    this.scene.score = backupValue;
+                    this.scene.itemScoreText.setText(backupValue);
+                    break;
+                case 'hearts':
+                    this.scene.hearts = backupValue;
+                    break;
+                // Diğer değişkenler için de implementasyon eklenebilir
+            }
+        }
+    }
+
+    // Status bilgisi
+    getStatus() {
+        return {
+            isActive: this.isActive,
+            protectedVariableCount: this.protectedVars.size,
+            suspiciousChangesCount: this.suspiciousChanges.length,
+            trustScore: this.trustScore,
+            lastValidation: this.lastValidation || 'Not yet performed',
+            validationInterval: this.validationInterval / 1000 + 's'
+        };
+    }
+
+    // Son suspicious changes'i göster
+    getRecentSuspiciousChanges(count = 5) {
+        return this.suspiciousChanges.slice(-count);
+    }
+}
+
+// Global access
+window.WizardVariableProtection = WizardVariableProtection;
+
+console.log('🛡️ Variable Protection System loaded and ready!');
+
+// 📊 RATE LIMITING SYSTEM
+class WizardRateLimiting {
+    constructor(gameScene) {
+        this.scene = gameScene;
+        this.isActive = false;
+        this.trustScore = 100;
+
+        // Action tracking
+        this.actionHistory = [];
+        this.clickHistory = [];
+        this.arrowHistory = [];
+
+        // Rate limits (per second)
+        this.maxActionsPerSecond = 10;
+        this.maxClicksPerSecond = 15;
+        this.maxArrowsPerSecond = 8;
+
+        // Time windows (ms)
+        this.shortWindow = 1000;  // 1 second
+        this.mediumWindow = 5000; // 5 seconds
+        this.longWindow = 30000;  // 30 seconds
+
+        // Violation tracking
+        this.violations = [];
+        this.warningCount = 0;
+        this.suspiciousPatterns = [];
+
+        console.log('📊 Rate Limiting System initialized');
+    }
+
+    start() {
+        if (this.isActive) return;
+        this.isActive = true;
+
+        // Cleanup loop başlat
+        this.startCleanupLoop();
+
+        console.log('📊 Rate Limiting ACTIVE');
+        console.log(`⚡ Max actions/sec: ${this.maxActionsPerSecond}`);
+        console.log(`🖱️ Max clicks/sec: ${this.maxClicksPerSecond}`);
+        console.log(`🏹 Max arrows/sec: ${this.maxArrowsPerSecond}`);
+    }
+
+    stop() {
+        this.isActive = false;
+        console.log('📊 Rate Limiting STOPPED');
+    }
+
+    // Cleanup loop - eski kayıtları temizle
+    startCleanupLoop() {
+        if (!this.isActive) return;
+
+        this.cleanupOldRecords();
+
+        setTimeout(() => {
+            this.startCleanupLoop();
+        }, 5000); // 5 saniyede bir cleanup
+    }
+
+    // Eski kayıtları temizle
+    cleanupOldRecords() {
+        const now = Date.now();
+        const cutoff = now - this.longWindow;
+
+        this.actionHistory = this.actionHistory.filter(action => action.timestamp > cutoff);
+        this.clickHistory = this.clickHistory.filter(click => click.timestamp > cutoff);
+        this.arrowHistory = this.arrowHistory.filter(arrow => arrow.timestamp > cutoff);
+        this.violations = this.violations.filter(violation => violation.timestamp > cutoff);
+    }
+
+    // Genel action kaydet
+    recordAction(actionType, data = {}) {
+        if (!this.isActive) return;
+
+        const timestamp = Date.now();
+        const action = {
+            type: actionType,
+            timestamp: timestamp,
+            data: data
+        };
+
+        this.actionHistory.push(action);
+
+        // Rate limiting kontrolü
+        this.checkActionRates(actionType, timestamp);
+    }
+
+    // Click kaydet
+    recordClick(x, y, buttonType = 'left') {
+        if (!this.isActive) return;
+
+        const timestamp = Date.now();
+        const click = {
+            x: x,
+            y: y,
+            button: buttonType,
+            timestamp: timestamp
+        };
+
+        this.clickHistory.push(click);
+
+        // Click rate kontrolü
+        this.checkClickRates(timestamp);
+    }
+
+    // Arrow shot kaydet
+    recordArrowShot(velocityX, velocityY) {
+        if (!this.isActive) return;
+
+        const timestamp = Date.now();
+        const arrow = {
+            velocityX: velocityX,
+            velocityY: velocityY,
+            timestamp: timestamp
+        };
+
+        this.arrowHistory.push(arrow);
+
+        // Arrow rate kontrolü
+        this.checkArrowRates(timestamp);
+
+        // Genel action olarak da kaydet
+        this.recordAction('arrow_shot', { velocityX, velocityY });
+    }
+
+    // Action rate kontrolü
+    checkActionRates(actionType, timestamp) {
+        const recentActions = this.getRecentActions(this.shortWindow);
+        const actionsPerSecond = recentActions.length;
+
+        if (actionsPerSecond > this.maxActionsPerSecond) {
+            this.handleRateViolation('action_rate_exceeded', {
+                type: actionType,
+                rate: actionsPerSecond,
+                limit: this.maxActionsPerSecond,
+                window: 'short'
+            }, 7);
+        }
+
+        // Medium window check
+        const mediumActions = this.getRecentActions(this.mediumWindow);
+        const mediumRate = mediumActions.length / (this.mediumWindow / 1000);
+
+        if (mediumRate > this.maxActionsPerSecond * 0.8) {
+            this.handleRateViolation('sustained_high_activity', {
+                type: actionType,
+                rate: mediumRate.toFixed(2),
+                window: 'medium'
+            }, 5);
+        }
+    }
+
+    // Click rate kontrolü
+    checkClickRates(timestamp) {
+        const recentClicks = this.getRecentClicks(this.shortWindow);
+        const clicksPerSecond = recentClicks.length;
+
+        if (clicksPerSecond > this.maxClicksPerSecond) {
+            this.handleRateViolation('click_rate_exceeded', {
+                rate: clicksPerSecond,
+                limit: this.maxClicksPerSecond,
+                window: 'short'
+            }, 6);
+        }
+
+        // Pattern analysis
+        this.analyzeClickPatterns(recentClicks);
+    }
+
+    // Arrow rate kontrolü
+    checkArrowRates(timestamp) {
+        const recentArrows = this.getRecentArrows(this.shortWindow);
+        const arrowsPerSecond = recentArrows.length;
+
+        if (arrowsPerSecond > this.maxArrowsPerSecond) {
+            this.handleRateViolation('arrow_rate_exceeded', {
+                rate: arrowsPerSecond,
+                limit: this.maxArrowsPerSecond,
+                window: 'short'
+            }, 9);
+        }
+
+        // Arrow pattern analysis
+        this.analyzeArrowPatterns(recentArrows);
+    }
+
+    // Son X ms içindeki actionları al
+    getRecentActions(windowMs) {
+        const cutoff = Date.now() - windowMs;
+        return this.actionHistory.filter(action => action.timestamp > cutoff);
+    }
+
+    // Son X ms içindeki clickleri al
+    getRecentClicks(windowMs) {
+        const cutoff = Date.now() - windowMs;
+        return this.clickHistory.filter(click => click.timestamp > cutoff);
+    }
+
+    // Son X ms içindeki arrowları al
+    getRecentArrows(windowMs) {
+        const cutoff = Date.now() - windowMs;
+        return this.arrowHistory.filter(arrow => arrow.timestamp > cutoff);
+    }
+
+    // Click pattern analizi
+    analyzeClickPatterns(recentClicks) {
+        if (recentClicks.length < 5) return;
+
+        // Aynı pozisyonda çok fazla click
+        const positions = recentClicks.map(click => `${Math.round(click.x / 10)}x${Math.round(click.y / 10)}`);
+        const positionCounts = {};
+        positions.forEach(pos => positionCounts[pos] = (positionCounts[pos] || 0) + 1);
+
+        const maxSamePosition = Math.max(...Object.values(positionCounts));
+        if (maxSamePosition >= 8) {
+            this.handleRateViolation('repetitive_clicking', {
+                samePositionClicks: maxSamePosition,
+                position: Object.keys(positionCounts).find(key => positionCounts[key] === maxSamePosition)
+            }, 7);
+        }
+
+        // Perfect timing pattern (bot detection)
+        if (recentClicks.length >= 5) {
+            const intervals = [];
+            for (let i = 1; i < recentClicks.length; i++) {
+                intervals.push(recentClicks[i].timestamp - recentClicks[i - 1].timestamp);
+            }
+
+            const avgInterval = intervals.reduce((a, b) => a + b, 0) / intervals.length;
+            const variance = intervals.reduce((acc, interval) => acc + Math.pow(interval - avgInterval, 2), 0) / intervals.length;
+
+            // Çok düşük variance = bot
+            if (variance < 100 && avgInterval < 200) {
+                this.handleRateViolation('robotic_clicking', {
+                    avgInterval: avgInterval.toFixed(2),
+                    variance: variance.toFixed(2)
+                }, 9);
+            }
+        }
+    }
+
+    // Arrow pattern analizi
+    analyzeArrowPatterns(recentArrows) {
+        if (recentArrows.length < 3) return;
+
+        // Aynı velocity ile çok fazla atış
+        const velocities = recentArrows.map(arrow => `${Math.round(arrow.velocityX)}x${Math.round(arrow.velocityY)}`);
+        const velocityCounts = {};
+        velocities.forEach(vel => velocityCounts[vel] = (velocityCounts[vel] || 0) + 1);
+
+        const maxSameVelocity = Math.max(...Object.values(velocityCounts));
+        if (maxSameVelocity >= 7) {
+            this.handleRateViolation('repetitive_arrows', {
+                sameVelocityCount: maxSameVelocity,
+                velocity: Object.keys(velocityCounts).find(key => velocityCounts[key] === maxSameVelocity)
+            }, 6);
+        }
+    }
+
+    // Rate violation işle
+    async handleRateViolation(violationType, details, severity) {
+        console.log(`🚨 RATE LIMITING VIOLATION!`);
+        console.log(`Type: ${violationType}`);
+        console.log(`Details:`, details);
+        console.log(`Severity: ${severity}/10`);
+
+        // Trust score düşür
+        const scoreDecrease = severity * 3;
+        this.trustScore = Math.max(0, this.trustScore - scoreDecrease);
+        console.log(`📊 Trust Score decreased to: ${this.trustScore}%`);
+
+        // Violation kaydet
+        const violation = {
+            type: violationType,
+            details: details,
+            severity: severity,
+            timestamp: Date.now(),
+            trustScore: this.trustScore
+        };
+
+        this.violations.push(violation);
+        this.warningCount++;
+
+        // Backend'e rapor et
+        if (this.scene.api && this.scene.api.reportSuspiciousActivity) {
+            try {
+                await this.scene.api.reportSuspiciousActivity({
+                    sessionId: this.scene.api.sessionId,
+                    activityType: 'rate_limiting_violation',
+                    details: `${violationType}: ${JSON.stringify(details)}`,
+                    severityLevel: severity,
+                    timestamp: Date.now()
+                });
+            } catch (error) {
+                console.error('❌ Failed to report rate violation:', error);
+            }
+        }
+
+        // Severity'ye göre action al
+        if (severity >= 8) {
+            this.handleCriticalViolation(violation);
+        } else if (severity >= 6) {
+            this.showWarning(violation);
+        }
+    }
+
+    // Kritik violation işle
+    handleCriticalViolation(violation) {
+        console.log('💀 CRITICAL RATE VIOLATION - TERMINATING GAME');
+
+        this.stop();
+        this.scene.gameActive = false;
+
+        // Warning mesajı göster
+        const violationText = this.scene.add.text(
+            this.scene.scale.width / 2,
+            this.scene.scale.height / 2,
+            `🚨 RATE LIMITING VIOLATION 🚨\n\n${violation.type.toUpperCase()}\n\nToo many actions per second\n\nGame Terminated`,
+            {
+                fontSize: '24px',
+                fill: '#ff0000',
+                align: 'center',
+                fontFamily: 'monospace',
+                stroke: '#ffffff',
+                strokeThickness: 2
+            }
+        );
+        violationText.setOrigin(0.5);
+        violationText.setDepth(10000);
+
+        // 3 saniye sonra game over
+        setTimeout(() => {
+            this.scene.handleGameOver();
+        }, 3000);
+    }
+
+    // Warning göster
+    showWarning(violation) {
+        const warningText = this.scene.add.text(
+            this.scene.scale.width / 2,
+            120,
+            `⚠️ RATE WARNING: ${violation.type}\nSlow down your actions!`,
+            {
+                fontSize: '18px',
+                fill: '#ffaa00',
+                align: 'center',
+                fontFamily: 'monospace',
+                stroke: '#000000',
+                strokeThickness: 2
+            }
+        );
+        warningText.setOrigin(0.5);
+        warningText.setDepth(9999);
+
+        // 3 saniye sonra kaybolsun
+        setTimeout(() => {
+            if (warningText && warningText.destroy) {
+                warningText.destroy();
+            }
+        }, 3000);
+    }
+
+    // Manual rate check (debug için)
+    checkCurrentRates() {
+        const shortActions = this.getRecentActions(this.shortWindow);
+        const shortClicks = this.getRecentClicks(this.shortWindow);
+        const shortArrows = this.getRecentArrows(this.shortWindow);
+
+        console.log('📊 CURRENT RATES:');
+        console.log(`Actions/sec: ${shortActions.length}/${this.maxActionsPerSecond}`);
+        console.log(`Clicks/sec: ${shortClicks.length}/${this.maxClicksPerSecond}`);
+        console.log(`Arrows/sec: ${shortArrows.length}/${this.maxArrowsPerSecond}`);
+        console.log(`Trust Score: ${this.trustScore}%`);
+    }
+
+    // Status bilgisi
+    getStatus() {
+        return {
+            isActive: this.isActive,
+            trustScore: this.trustScore,
+            totalActions: this.actionHistory.length,
+            totalClicks: this.clickHistory.length,
+            totalArrows: this.arrowHistory.length,
+            violationCount: this.violations.length,
+            warningCount: this.warningCount,
+            recentActionsPerSec: this.getRecentActions(this.shortWindow).length,
+            recentClicksPerSec: this.getRecentClicks(this.shortWindow).length,
+            recentArrowsPerSec: this.getRecentArrows(this.shortWindow).length
+        };
+    }
+
+    // Son violationları göster
+    getRecentViolations(count = 3) {
+        return this.violations.slice(-count);
+    }
+}
+
+// Global access
+window.WizardRateLimiting = WizardRateLimiting;
+
+console.log('📊 Rate Limiting System loaded and ready!');
+
+// 📍 POSITION VALIDATION SYSTEM
+class WizardPositionValidation {
+    constructor(gameScene) {
+        this.scene = gameScene;
+        this.isActive = false;
+        this.trustScore = 100;
+
+        // Position tracking
+        this.positionHistory = [];
+        this.lastValidPosition = { x: 0, y: 0, timestamp: 0 };
+        this.currentPosition = { x: 0, y: 0 };
+
+        // Movement limits
+        this.maxMovementSpeed = 500; // pixels per second
+        this.teleportThreshold = 100; // pixels instantly
+        this.boundaryTolerance = 10; // pixels outside boundaries
+
+        // Game boundaries
+        this.boundaries = {
+            minX: 0,
+            maxX: 1536,
+            minY: 0,
+            maxY: 1024
+        };
+
+        // Tracking intervals
+        this.trackingInterval = 100; // 100ms tracking
+        this.historyWindow = 10000; // 10 seconds history
+
+        // Violation tracking
+        this.violations = [];
+        this.teleportCount = 0;
+        this.boundaryViolations = 0;
+        this.suspiciousMovements = [];
+
+        console.log('📍 Position Validation System initialized');
+    }
+
+    start() {
+        if (this.isActive) return;
+        this.isActive = true;
+
+        // Initial position capture'ı geciktir
+        setTimeout(() => {
+            this.captureInitialPosition();
+        }, 2000); // 2 saniye bekle
+
+        // Position tracking'i de geciktir
+        setTimeout(() => {
+            this.startPositionTracking();
+        }, 3000); // 3 saniye bekle
+
+        console.log('📍 Position Validation ACTIVE (delayed start)');
+        console.log(`🏃 Max movement speed: ${this.maxMovementSpeed} px/s`);
+        console.log(`📡 Teleport threshold: ${this.teleportThreshold} px`);
+        console.log(`🔲 Boundary tolerance: ${this.boundaryTolerance} px`);
+    }
+
+    stop() {
+        this.isActive = false;
+        console.log('📍 Position Validation STOPPED');
+    }
+
+    captureInitialPosition() {
+        if (!this.scene.player) {
+            // Player henüz yok, 1 saniye sonra tekrar dene
+            setTimeout(() => this.captureInitialPosition(), 1000);
+            return;
+        }
+
+        const position = {
+            x: this.scene.player.x,
+            y: this.scene.player.y,
+            timestamp: Date.now()
+        };
+
+        this.lastValidPosition = position;
+        this.currentPosition = { x: position.x, y: position.y };
+        this.positionHistory.push(position);
+
+        console.log('📍 Initial position captured:', position);
+    }
+
+    // Position tracking loop
+    startPositionTracking() {
+        if (!this.isActive) return;
+
+        this.trackCurrentPosition();
+
+        setTimeout(() => {
+            this.startPositionTracking();
+        }, this.trackingInterval);
+    }
+
+    // Mevcut pozisyonu track et
+    trackCurrentPosition() {
+        if (!this.scene.player || !this.scene.gameActive) return;
+
+        const timestamp = Date.now();
+        const newPosition = {
+            x: this.scene.player.x,
+            y: this.scene.player.y,
+            timestamp: timestamp
+        };
+
+        // Position validation
+        const validationResult = this.validatePosition(newPosition);
+
+        if (validationResult.isValid) {
+            // Valid position - kaydet
+            this.updateValidPosition(newPosition);
+        } else {
+            // Invalid position - handle violation
+            this.handlePositionViolation(newPosition, validationResult);
+        }
+
+        // History cleanup
+        this.cleanupPositionHistory();
+    }
+
+    // Position validation
+    validatePosition(newPosition) {
+        const timeDiff = newPosition.timestamp - this.lastValidPosition.timestamp;
+        const distanceX = Math.abs(newPosition.x - this.lastValidPosition.x);
+        const distanceY = Math.abs(newPosition.y - this.lastValidPosition.y);
+        const totalDistance = Math.sqrt(distanceX * distanceX + distanceY * distanceY);
+
+        // Teleportation check (instant large movement)
+        if (totalDistance > this.teleportThreshold && timeDiff < 200) {
+            return {
+                isValid: false,
+                reason: 'teleportation',
+                details: `Moved ${totalDistance.toFixed(2)}px in ${timeDiff}ms (threshold: ${this.teleportThreshold}px)`,
+                severity: 9,
+                distance: totalDistance,
+                time: timeDiff
+            };
+        }
+
+        // Speed check (movement too fast)
+        if (timeDiff > 0) {
+            const speed = (totalDistance / timeDiff) * 1000; // pixels per second
+            if (speed > this.maxMovementSpeed) {
+                return {
+                    isValid: false,
+                    reason: 'impossible_speed',
+                    details: `Speed: ${speed.toFixed(2)} px/s (max: ${this.maxMovementSpeed} px/s)`,
+                    severity: 8,
+                    speed: speed,
+                    distance: totalDistance
+                };
+            }
+        }
+
+        // Boundary check
+        const boundaryResult = this.checkBoundaries(newPosition);
+        if (!boundaryResult.isValid) {
+            return {
+                isValid: false,
+                reason: 'boundary_violation',
+                details: boundaryResult.details,
+                severity: 7,
+                boundary: boundaryResult.boundary
+            };
+        }
+
+        // Player immobility check - daha toleranslı
+        if (this.scene.player.body && this.scene.player.body.immovable) {
+            const minMovement = 50; // 5'den 50'ye çıkar
+            if (totalDistance > minMovement) {
+                return {
+                    isValid: false,
+                    reason: 'immovable_player_moved',
+                    details: `Immovable player moved ${totalDistance.toFixed(2)}px`,
+                    severity: 8, // 10'dan 8'e düşür
+                    distance: totalDistance
+                };
+            }
+        }
+
+        return { isValid: true };
+    }
+
+    // Boundary kontrolü
+    checkBoundaries(position) {
+        const tolerance = this.boundaryTolerance;
+
+        if (position.x < this.boundaries.minX - tolerance) {
+            return {
+                isValid: false,
+                details: `X position ${position.x} below minimum ${this.boundaries.minX}`,
+                boundary: 'left'
+            };
+        }
+
+        if (position.x > this.boundaries.maxX + tolerance) {
+            return {
+                isValid: false,
+                details: `X position ${position.x} above maximum ${this.boundaries.maxX}`,
+                boundary: 'right'
+            };
+        }
+
+        if (position.y < this.boundaries.minY - tolerance) {
+            return {
+                isValid: false,
+                details: `Y position ${position.y} below minimum ${this.boundaries.minY}`,
+                boundary: 'top'
+            };
+        }
+
+        if (position.y > this.boundaries.maxY + tolerance) {
+            return {
+                isValid: false,
+                details: `Y position ${position.y} above maximum ${this.boundaries.maxY}`,
+                boundary: 'bottom'
+            };
+        }
+
+        return { isValid: true };
+    }
+
+    // Valid position güncelle
+    updateValidPosition(newPosition) {
+        this.lastValidPosition = newPosition;
+        this.currentPosition = { x: newPosition.x, y: newPosition.y };
+        this.positionHistory.push(newPosition);
+    }
+
+    // Position violation işle
+    async handlePositionViolation(invalidPosition, validationResult) {
+        console.log(`🚨 POSITION VALIDATION VIOLATION!`);
+        console.log(`Reason: ${validationResult.reason}`);
+        console.log(`Details: ${validationResult.details}`);
+        console.log(`Severity: ${validationResult.severity}/10`);
+        console.log(`Invalid position:`, invalidPosition);
+        console.log(`Last valid position:`, this.lastValidPosition);
+
+        // Trust score düşür
+        const scoreDecrease = validationResult.severity * 4;
+        this.trustScore = Math.max(0, this.trustScore - scoreDecrease);
+        console.log(`📊 Trust Score decreased to: ${this.trustScore}%`);
+
+        // Violation sayacları
+        switch (validationResult.reason) {
+            case 'teleportation':
+                this.teleportCount++;
+                break;
+            case 'boundary_violation':
+                this.boundaryViolations++;
+                break;
+            default:
+                this.suspiciousMovements.push(validationResult);
+        }
+
+        // Violation kaydet
+        const violation = {
+            type: validationResult.reason,
+            details: validationResult.details,
+            severity: validationResult.severity,
+            timestamp: Date.now(),
+            invalidPosition: invalidPosition,
+            lastValidPosition: this.lastValidPosition,
+            trustScore: this.trustScore
+        };
+
+        this.violations.push(violation);
+
+        // Backend'e rapor et
+        if (this.scene.api && this.scene.api.reportSuspiciousActivity) {
+            try {
+                await this.scene.api.reportSuspiciousActivity({
+                    sessionId: this.scene.api.sessionId,
+                    activityType: 'position_violation',
+                    details: `${validationResult.reason}: ${validationResult.details}`,
+                    severityLevel: validationResult.severity,
+                    timestamp: Date.now()
+                });
+            } catch (error) {
+                console.error('❌ Failed to report position violation:', error);
+            }
+        }
+
+        // Severity'ye göre action al
+        if (validationResult.severity >= 9) {
+            this.handleCriticalViolation(violation);
+        } else if (validationResult.severity >= 7) {
+            this.showWarning(violation);
+            // Position'ı force reset et
+            this.forcePositionReset();
+        }
+    }
+
+    // Kritik violation işle
+    handleCriticalViolation(violation) {
+        console.log('💀 CRITICAL POSITION VIOLATION - TERMINATING GAME');
+
+        this.stop();
+        this.scene.gameActive = false;
+
+        // Violation mesajı göster
+        const violationText = this.scene.add.text(
+            this.scene.scale.width / 2,
+            this.scene.scale.height / 2,
+            `🚨 POSITION VIOLATION DETECTED 🚨\n\n${violation.type.toUpperCase()}\n\n${violation.details}\n\nGame Terminated`,
+            {
+                fontSize: '24px',
+                fill: '#ff0000',
+                align: 'center',
+                fontFamily: 'monospace',
+                stroke: '#ffffff',
+                strokeThickness: 2
+            }
+        );
+        violationText.setOrigin(0.5);
+        violationText.setDepth(10000);
+
+        // 3 saniye sonra game over
+        setTimeout(() => {
+            this.scene.handleGameOver();
+        }, 3000);
+    }
+
+    // Warning göster
+    showWarning(violation) {
+        const warningText = this.scene.add.text(
+            this.scene.scale.width / 2,
+            140,
+            `⚠️ POSITION WARNING: ${violation.type}\nPosition has been reset!`,
+            {
+                fontSize: '18px',
+                fill: '#ffaa00',
+                align: 'center',
+                fontFamily: 'monospace',
+                stroke: '#000000',
+                strokeThickness: 2
+            }
+        );
+        warningText.setOrigin(0.5);
+        warningText.setDepth(9999);
+
+        // 3 saniye sonra kaybolsun
+        setTimeout(() => {
+            if (warningText && warningText.destroy) {
+                warningText.destroy();
+            }
+        }, 3000);
+    }
+
+    // Position force reset
+    forcePositionReset() {
+        if (!this.scene.player) return;
+
+        console.log('🔄 Force resetting player position to last valid position');
+
+        this.scene.player.setPosition(this.lastValidPosition.x, this.lastValidPosition.y);
+        this.currentPosition = {
+            x: this.lastValidPosition.x,
+            y: this.lastValidPosition.y
+        };
+
+        // Reset physics velocity if any
+        if (this.scene.player.body) {
+            this.scene.player.body.setVelocity(0, 0);
+        }
+    }
+
+    // Position history cleanup
+    cleanupPositionHistory() {
+        const cutoff = Date.now() - this.historyWindow;
+        this.positionHistory = this.positionHistory.filter(pos => pos.timestamp > cutoff);
+        this.violations = this.violations.filter(violation => violation.timestamp > cutoff);
+    }
+
+    // Movement pattern analizi
+    analyzeMovementPatterns() {
+        if (this.positionHistory.length < 10) return;
+
+        const recent = this.positionHistory.slice(-10);
+        const movements = [];
+
+        for (let i = 1; i < recent.length; i++) {
+            const prev = recent[i - 1];
+            const curr = recent[i];
+            const timeDiff = curr.timestamp - prev.timestamp;
+            const distance = Math.sqrt(
+                Math.pow(curr.x - prev.x, 2) + Math.pow(curr.y - prev.y, 2)
+            );
+
+            if (timeDiff > 0) {
+                movements.push({
+                    distance: distance,
+                    time: timeDiff,
+                    speed: (distance / timeDiff) * 1000
+                });
+            }
+        }
+
+        if (movements.length === 0) return;
+
+        // Average speed analizi
+        const avgSpeed = movements.reduce((sum, m) => sum + m.speed, 0) / movements.length;
+
+        // Pattern detection - sürekli yüksek hız
+        const highSpeedCount = movements.filter(m => m.speed > this.maxMovementSpeed * 0.8).length;
+
+        if (highSpeedCount >= 5) {
+            console.log('🚨 Suspicious movement pattern: sustained high speed');
+            console.log(`Average speed: ${avgSpeed.toFixed(2)} px/s`);
+        }
+    }
+
+    // Manual position check (debug için)
+    checkCurrentPosition() {
+        if (!this.scene.player) return;
+
+        const currentPos = {
+            x: this.scene.player.x,
+            y: this.scene.player.y,
+            timestamp: Date.now()
+        };
+
+        const validation = this.validatePosition(currentPos);
+
+        console.log('📍 POSITION CHECK:');
+        console.log('Current position:', currentPos);
+        console.log('Last valid position:', this.lastValidPosition);
+        console.log('Validation result:', validation);
+        console.log('Trust score:', this.trustScore + '%');
+    }
+
+    // Status bilgisi
+    getStatus() {
+        return {
+            isActive: this.isActive,
+            trustScore: this.trustScore,
+            currentPosition: this.currentPosition,
+            lastValidPosition: this.lastValidPosition,
+            positionHistoryLength: this.positionHistory.length,
+            violationCount: this.violations.length,
+            teleportCount: this.teleportCount,
+            boundaryViolations: this.boundaryViolations,
+            suspiciousMovements: this.suspiciousMovements.length,
+            trackingInterval: this.trackingInterval + 'ms'
+        };
+    }
+
+    // Son violationları göster
+    getRecentViolations(count = 3) {
+        return this.violations.slice(-count);
+    }
+
+    // Position history göster
+    getPositionHistory(count = 10) {
+        return this.positionHistory.slice(-count);
+    }
+}
+
+// Global access
+window.WizardPositionValidation = WizardPositionValidation;
+
+console.log('📍 Position Validation System loaded and ready!');
+
 // ------------------- Start Scene -------------------
 
 class StartScene extends Phaser.Scene {
@@ -9,89 +2214,170 @@ class StartScene extends Phaser.Scene {
 
     preload() {
         this.load.image('start-button', 'assets_w/ui/start-button.png');
-        this.load.image('game-title', 'assets_w/ui/title.png');
         this.load.image('sound-on', 'assets_w/ui/sound-on-white.png');    // Ses açık ikonu
         this.load.image('sound-off', 'assets_w/ui/sound-off-white.png');  // Ses kapalı ikonu
         this.load.image('start', 'assets_w/ui/start.png');
+        this.load.image('howToButton', 'assets_w/ui/howToBtn.png')
+
+        this.load.audio('background-music', 'assets_w/audio/background-music.mp3');
+        this.load.audio('button-click', 'assets_w/audio/button-click.mp3');
     }
 
     create() {
-    this.recommendedImages = [];
+        this.background = this.add.image(config.width / 2, config.height / 2, 'start')
 
-    this.background = this.add.image(config.width / 2, config.height / 2, 'start');
-
-    // SES BUTONU
-    this.isSoundOn = true;
-    this.soundButton = this.add.image(config.width - 50, 50, 'sound-on');
-    this.soundButton.setDepth(10);
-    this.soundButton.setOrigin(0.5);
-    this.soundButton.setScale(0.15);
-    this.soundButton.setInteractive({ useHandCursor: true });
-
-    this.soundButton.on('pointerdown', () => {
-        this.isSoundOn = !this.isSoundOn;
-
-        if (this.isSoundOn) {
-            this.soundButton.setTexture('sound-on');
-            this.sound.mute = false;
-        } else {
-            this.soundButton.setTexture('sound-off');
-            this.sound.mute = true;
-        }
-    });
-
-    // Glow efekti
-    let glowGraphics = this.add.graphics();
-    glowGraphics.fillStyle(0xffff00, 0.1);
-    glowGraphics.fillRect(0, 0, 1000, 600);
-
-    this.tweens.add({
-        targets: glowGraphics,
-        alpha: { from: 0.1, to: 0.2 },
-        duration: 1500,
-        yoyo: true,
-        repeat: -1
-    });
-
-    // Buton (ilk başta işlevsiz)
-    let startButton = this.add.image(config.width / 2, config.width / 2 + 50, 'start-button');
-    startButton.setScale(0.4);
-    startButton.setInteractive({ useHandCursor: true });
-    startButton.setDepth(2);
-
-    // Pulse efekt
-    let buttonTween = this.tweens.add({
-        targets: [startButton],
-        scaleX: { from: startButton.scaleX, to: startButton.scaleX * 1.1 },
-        scaleY: { from: startButton.scaleY, to: startButton.scaleY * 1.1 },
-        duration: 800,
-        yoyo: true,
-        repeat: -1
-    });
-
-    startButton.on('pointerover', () => {
-        startButton.setScale(0.45);
-        buttonTween.pause();
-    });
-
-    startButton.on('pointerout', () => {
-        startButton.setScale(0.4);
-        buttonTween.resume();
-    });
-
-    
-    fetch('/api/product/recommendedImages')
-        .then(res => res.json())
-        .then(images => {
-            this.recommendedImages = images;
-
-            startButton.on('pointerdown', () => {
-                startButton.disableInteractive();
-                startButton.setVisible(false);
-                this.scene.start('GameScene', { images: this.recommendedImages });
-            });
+        // 🌐 API'yi test et - BURAYA EKLE
+        window.wizardAPI.getStatus().then(statusData => {
+            if (statusData) {
+                console.log('🎮 Backend bağlantısı başarılı!', statusData.message);
+            } else {
+                console.log('❌ Backend bağlantısı başarısız!');
+            }
         });
-}
+
+        // Arkaplan müziği başlat
+        this.backgroundMusic = this.sound.add('background-music', {
+            volume: 0.3,
+            loop: true
+        });
+        this.backgroundMusic.play();
+
+        // Button click sesi
+        this.buttonClickSound = this.sound.add('button-click', { volume: 0.7 });
+
+        // SES BUTONU
+        this.isSoundOn = true;
+        this.soundButton = this.add.image(config.width - 50, 50, 'sound-on');
+        this.soundButton.setDepth(10); // Ses butonunu öne al
+        this.soundButton.setOrigin(0.5);
+        this.soundButton.setScale(0.15);
+        this.soundButton.setInteractive({ useHandCursor: true });
+
+        this.soundButton.on('pointerdown', () => {
+            this.isSoundOn = !this.isSoundOn;
+
+            if (this.isSoundOn) {
+                this.soundButton.setTexture('sound-on');
+                this.sound.mute = false;
+            } else {
+                this.soundButton.setTexture('sound-off');
+                this.sound.mute = true;
+            }
+        });
+
+        // Parlayan efekt - arka plan için overlay
+        let glowGraphics = this.add.graphics();
+        glowGraphics.fillStyle(0xffff00, 0.1);
+        glowGraphics.fillRect(0, 0, 1000, 600);
+
+        // Glow efekti animasyonu
+        this.tweens.add({
+            targets: glowGraphics,
+            alpha: { from: 0.1, to: 0.2 },
+            duration: 1500,
+            yoyo: true,
+            repeat: -1
+        });
+
+        // Buton
+        this.startButton = this.add.image(config.width / 2, config.height / 2 + 150, 'start-button');
+        this.startButton.setScale(0.4);
+        this.startButton.setInteractive({ useHandCursor: true });
+        this.startButton.setDepth(2);
+
+
+        // Buton için pulse efekti
+        let buttonTween = this.tweens.add({
+            targets: [this.startButton],
+            scaleX: { from: this.startButton.scaleX, to: this.startButton.scaleX * 1.1 },
+            scaleY: { from: this.startButton.scaleY, to: this.startButton.scaleY * 1.1 },
+            duration: 800,
+            yoyo: true,
+            repeat: -1
+        });
+
+        // Buton efektleri
+        this.startButton.on('pointerover', () => {
+            this.startButton.setScale(0.45);
+            buttonTween.pause();
+        });
+
+        this.startButton.on('pointerout', () => {
+            this.startButton.setScale(0.4);
+            buttonTween.resume();
+        });
+
+        this.startButton.on('pointerdown', () => {
+            // Button click sesi çal
+            this.buttonClickSound.play();
+            this.startButton.disableInteractive();
+            this.startButton.setVisible(false);
+            // Menü müziğini durdur
+            this.backgroundMusic.stop();
+            this.scene.start('GameScene');
+
+        });
+
+        this.isPopupOpen = false;
+        this.howToPlayBtn = this.add.image(config.width / 2, config.height - 100, 'howToButton')
+        this.howToPlayBtn.setScale(0.4)
+        this.howToPlayBtn.setInteractive({ useHandCursor: true });
+
+        // Buton efektleri
+        this.howToPlayBtn.on('pointerover', () => {
+            this.howToPlayBtn.setScale(0.45);
+        });
+
+        this.howToPlayBtn.on('pointerout', () => {
+            this.howToPlayBtn.setScale(0.4);
+        });
+
+        this.howToPlayBtn.on('pointerdown', () => {
+            this.openHowToPlayPopup();
+        });
+    }
+
+    openHowToPlayPopup() {
+        this.howToPlayBtn.disableInteractive();
+        this.startButton.disableInteractive();
+        const popupBg = this.add.rectangle(
+            config.width / 2, config.height / 2,
+            config.width * 0.9, config.height * 0.6,
+            0x000000, 0.85
+        ).setScrollFactor(0).setDepth(2000);
+
+        const howToPlayText = this.add.text(
+            config.width / 2, config.height / 2,
+            '→ Fareyi sürükleyip nişan al:\n→ Büyü topunu fırlat\n→Hedefleri vurarak skor topla, zehir şişelerini vurmaktan kaçın!',
+            {
+                fontSize: '40px',
+                fontFamily: 'monospace',
+                fill: '#ffffff',
+                align: 'center',
+                wordWrap: { width: config.width * 0.8 }
+            }
+        ).setOrigin(0.5).setScrollFactor(0).setDepth(2001);
+
+        const closeText = this.add.text(
+            config.width / 2, config.height / 2 + 180,
+            'Kapat', {
+            fontSize: '35px',
+            fontFamily: 'monospace',
+            fill: '#ff6666',
+            backgroundColor: '#ffffff',
+            padding: { x: 12, y: 5 }
+        }
+        ).setOrigin(0.5).setInteractive().setScrollFactor(0).setDepth(2002);
+
+        closeText.on('pointerup', () => {
+            this.isPopupOpen = false;
+            popupBg.destroy();
+            howToPlayText.destroy();
+            closeText.destroy();
+            this.howToPlayBtn.setInteractive();
+            this.startButton.setInteractive();
+        });
+    }
 
 }
 
@@ -100,11 +2386,6 @@ class GameScene extends Phaser.Scene {
     constructor() {
         super({ key: 'GameScene' });
     }
-    init(data) {
-        this.recommendedImages = data.images || [];
-        this.loadedImageKeys = new Set();
-    }
-
 
     preload() {
         this.load.image('cloud', 'assets_w/background/cloud.png');
@@ -114,7 +2395,7 @@ class GameScene extends Phaser.Scene {
         this.load.image('fog', 'assets_w/background/fog.png');
         this.load.image('background-space', 'assets_w/background/background-space.png')
 
-        //this.load.image('item', 'assets_w/coin.png');
+        this.load.image('item', 'assets_w/coin.png');
         this.load.image('bomb', 'assets_w/poison.png');
         this.load.image('fireball-b', 'assets_w/fireball-b.png');
         this.load.image('fireball-r', 'assets_w/fireball-r.png');
@@ -126,10 +2407,90 @@ class GameScene extends Phaser.Scene {
         this.load.image('skor-panel', 'assets_w/ui/score-image.png');
         this.load.image('heart', 'assets_w/ui/heart.png');
         this.load.image('trophy', 'assets_w/trophy.png')
+
+        // Tüm ses dosyaları
+        this.load.audio('background-music', 'assets_w/audio/background-music.mp3');
+        this.load.audio('coin-sound', 'assets_w/audio/coin.mp3');
+        this.load.audio('bomb-sound', 'assets_w/audio/explosion.mp3');
+        this.load.audio('shoot-sound', 'assets_w/audio/shoot.mp3');
+        this.load.audio('level-complete', 'assets_w/audio/level-complete.mp3');
+        this.load.audio('lightning-sound', 'assets_w/audio/lightning.mp3');
     }
 
     create() {
         this.gameActive = true;
+
+        // 🌐 API client'i sahiple - BURAYA EKLE
+        this.api = window.wizardAPI;
+        this.gameStartTime = Date.now(); // ⏰ Oyun başlangıç zamanı
+        console.log('🎮 GameScene API client hazır');
+
+        // API'den config al
+        this.api.getGameConfig().then(config => {
+            if (config) {
+                console.log('📡 Backend config alındı:', config);
+                this.backendConfig = config; // Sakla
+            }
+        });
+
+        // 📸 Snapshot Protection sistemi başlat - BURAYA EKLE
+        this.snapshotProtection = new WizardSnapshotProtection(this);
+        this.snapshotProtection.setAPIClient(this.api);
+        this.snapshotProtection.start();
+
+        // Global access
+        window.wizardGameScene = this;
+
+        // Global access
+        window.wizardGameScene = this;
+
+        // 🍯 Honeypot Detection sistemi başlat - BURAYA EKLE
+        this.honeypot = new WizardHoneypot(this);
+        this.honeypot.setSessionId(this.api.sessionId);
+
+        console.log('🛡️ All security systems initialized');
+
+        console.log('🛡️ All security systems initialized');
+
+        // 🔥 Real-Time Monitoring sistemi başlat - YENİ!
+        this.realTimeMonitor = new WizardRealTimeMonitor(this);
+        this.realTimeMonitor.setAPIClient(this.api);
+        this.realTimeMonitor.start();
+
+        // 🛡️ Variable Protection sistemi başlat - YENİ!
+        this.variableProtection = new WizardVariableProtection(this);
+        this.variableProtection.start();
+
+        // 📊 Rate Limiting sistemi başlat - YENİ!
+        this.rateLimiting = new WizardRateLimiting(this);
+        this.rateLimiting.start();
+
+         //📍 Position Validation sistemi başlat - YENİ!
+        this.positionValidation = new WizardPositionValidation(this);
+        this.positionValidation.start();
+
+
+        console.log('🛡️ All security systems initialized');
+        console.log('🔥 Real-Time Monitoring: ACTIVE');
+        console.log('📸 Snapshot Protection: ACTIVE');
+        console.log('🍯 Honeypot Detection: ACTIVE');
+        console.log('🛡️ Variable Protection: ACTIVE'); // YENİ!
+        console.log('📊 Rate Limiting: ACTIVE'); // YENİ!
+         console.log('📍 Position Validation: ACTIVE'); // YENİ!
+
+        // Arkaplan müziği başlat
+        this.backgroundMusic = this.sound.add('background-music', {
+            volume: 0.2,
+            loop: true
+        });
+        this.backgroundMusic.play();
+
+        // Ses efektlerini yükle
+        this.coinSound = this.sound.add('coin-sound', { volume: 0.1 });
+        this.bombSound = this.sound.add('bomb-sound', { volume: 0.6 });
+        this.shootSound = this.sound.add('shoot-sound', { volume: 0.4 });
+        this.levelCompleteSound = this.sound.add('level-complete', { volume: 0.6 });
+        this.lightningSound = this.sound.add('lightning-sound', { volume: 0.7 });
 
         this.input.keyboard.on('keydown-J', () => {
             this.handleGameWin();
@@ -137,18 +2498,80 @@ class GameScene extends Phaser.Scene {
 
         this.input.keyboard.on('keydown-K', () => {
             this.scene.start('WinScene');
+            this.backgroundMusic.stop();
         });
 
         this.input.keyboard.on('keydown-L', () => {
-            this.scene.start('GameOverScene');
+            this.handleGameOver();
         });
 
-        this.itemSpawnInterval = 1000; // item spawn aralığı
+        this.input.keyboard.on('keydown-M', () => {
+            console.log('🛡️ SECURITY SYSTEMS STATUS:');
+            console.log('📊 Real-Time Monitor:', this.realTimeMonitor.getStatus());
+            console.log('📸 Snapshot Protection:', this.snapshotProtection.getStatus());
+            console.log('🍯 Honeypot System:', this.honeypot.getStatus());
+            console.log('🛡️ Variable Protection:', this.variableProtection.getStatus());
+            console.log('📊 Rate Limiting:', this.rateLimiting.getStatus()); // YENİ!
+            console.log('📍 Position Validation:', this.positionValidation.getStatus()); // YENİ!
+        });
+
+        this.input.keyboard.on('keydown-V', () => {
+            console.log('🧪 VARIABLE PROTECTION SAFE TEST');
+            console.log('Eski skor:', wizardGameScene.score);
+
+            // Küçük, güvenli artış (timing kontrolünü tetiklemeyen)
+            wizardGameScene.score += 30;
+            wizardGameScene.itemScoreText.setText(wizardGameScene.score);
+
+            console.log('Yeni skor:', wizardGameScene.score);
+            console.log('⏰ Variable Protection validation çalışacak ama game over OLMAYACAK...');
+        });
+
+        this.input.keyboard.on('keydown-R', () => {
+            console.log('🧪 RATE LIMITING SAFE TEST');
+            for (let i = 0; i < 8; i++) { // 20'den 8'e düşür
+                setTimeout(() => {
+                    this.shootArrow(300, -100);
+                }, i * 150); // 50ms'den 150ms'ye çıkar
+            }
+            console.log('⏰ Rate limiting warning vermeli ama game over OLMAMALI...');
+        });
+
+        // Position Validation test tuşu
+        this.input.keyboard.on('keydown-P', () => {
+            console.log('🧪 POSITION VALIDATION TEST');
+
+            // Player'ı teleport et
+            const oldX = this.player.x;
+            const oldY = this.player.y;
+
+            this.player.setPosition(oldX + 200, oldY + 200); // 200px teleport
+
+            console.log(`Player teleported from (${oldX}, ${oldY}) to (${this.player.x}, ${this.player.y})`);
+            console.log('⏰ Position validation bunu tespit etmeli...');
+        });
+
+        // Position check tuşu
+        this.input.keyboard.on('keydown-O', () => {
+            this.positionValidation.checkCurrentPosition();
+        });
+
+        this.itemSpawnInterval; // item spawn aralığı
         this.itemSpawnTimer = 0;
-        this.bombSpawnInterval = 2000; // 2 saniyede bir bomba spawn etme
+        this.bombSpawnInterval; // 2 saniyede bir bomba spawn etme
         this.bombSpawnTimer = 0;
 
+        this.score = 0;
+        this.initialTime = 15;  // saniye cinsinden başlangıç süresi
         this.hearts = 3; // Oyuncunun canı
+        this.arrowsFired = 0;
+        this.itemsSpawned = 0;
+        this.bombsSpawned = 0;
+        this.itemsHit = 0;
+        this.bombsHit = 0;
+        this.startTime = Date.now();
+        this.durationMs;
+        this.didWin = false
 
 
         this.physics.world.setBounds(0, 0, config.width, config.height); // Oyun alanının sınırlarını ayarla
@@ -214,7 +2637,32 @@ class GameScene extends Phaser.Scene {
         this.physics.add.overlap(this.arrows, this.items, this.hitItem, null, this);
         this.physics.add.overlap(this.arrows, this.bombs, this.hitBomb, null, this);
 
-        this.score = 0;
+        this.timerText = this.add.text(300, 60, this.initialTime, {
+            fontSize: '30px',
+            fontFamily: 'monospace',
+            fontWeight: 'bold',
+            fill: '#ffffff',
+            stroke: '#00ff00',
+            strokeThickness: 4,
+        })
+        this.timerText.setDepth(15)
+
+        // Her saniye bir kere çalışacak bir event oluştur
+        this.countdownTimer = this.time.addEvent({
+            delay: 1000,                // ms cinsinden: 1 saniye
+            callback: () => {
+                this.initialTime--;
+                this.timerText.setText(this.initialTime);
+
+                if (this.initialTime <= 0) {
+                    // Süre bitti: oyun bitti sahnesine ge
+                    this.handleGameOver();
+
+                }
+            },
+            callbackScope: this,
+            loop: true
+        });
 
         this.addUIElements(); // UI elementlerini ekle
 
@@ -266,6 +2714,12 @@ class GameScene extends Phaser.Scene {
                 }
             }
         });
+        // 📊 Click tracking ekle - YENİ!
+        this.input.on('pointerdown', (pointer) => {
+            if (this.rateLimiting) {
+                this.rateLimiting.recordClick(pointer.x, pointer.y, pointer.leftButtonDown() ? 'left' : 'right');
+            }
+        });
     }
 
     update(time, delta) {
@@ -289,7 +2743,6 @@ class GameScene extends Phaser.Scene {
         this.arrows.children.each((arrow) => {
             if (arrow.y < -50 || arrow.y > config.height + 50) {
                 arrow.destroy();
-                console.log("arrow destroyed");
             }
         });
 
@@ -349,6 +2802,9 @@ class GameScene extends Phaser.Scene {
 
             }
         });
+        if (this.honeypot) {
+            this.honeypot.trackPlayerArrows();
+        }
     }
 
     addUIElements() {
@@ -359,7 +2815,7 @@ class GameScene extends Phaser.Scene {
         this.skor.setDepth(15)
 
         // Score value text
-        this.itemScoreText = this.add.text(200, 80, '0', {
+        this.itemScoreText = this.add.text(190, 80, '0', {
             fontSize: '30px',
             fontFamily: 'monospace',
             fontWeight: 'bold',
@@ -370,7 +2826,6 @@ class GameScene extends Phaser.Scene {
         this.itemScoreText.setOrigin(0, 0.5);
         this.itemScoreText.setScrollFactor(0);
         this.itemScoreText.setDepth(15)
-
 
         this.heartIcons = [];
         for (let i = 0; i < this.hearts; i++) {
@@ -398,7 +2853,7 @@ class GameScene extends Phaser.Scene {
         }
 
         //yıldırım
-        this.time.addEvent({
+        this.lightningTimer = this.time.addEvent({
             delay: 10000, // 10 saniye (ms cinsinden)
             callback: this.autoLightning,
             callbackScope: this,
@@ -444,6 +2899,8 @@ class GameScene extends Phaser.Scene {
     }
 
     autoLightning() {
+        // Yıldırım sesi çal
+        this.lightningSound.play();
         const x = Phaser.Math.Between(50, config.width - 50);
         const y = Phaser.Math.Between(0, 200);
         this.drawLightning(x, y);
@@ -492,7 +2949,7 @@ class GameScene extends Phaser.Scene {
         );
         let hexColor = Phaser.Display.Color.GetColor(color.r, color.g, color.b);
 
-        this.trajectoryLine.lineStyle(2, hexColor, 1);
+        this.trajectoryLine.lineStyle(2, 0xffffff, 1);
 
         // Nokta çizimi
         for (let t = 0; t < totalTime; t += timeStep) {
@@ -514,7 +2971,27 @@ class GameScene extends Phaser.Scene {
         }
     }
 
-    shootArrow(x, y) {
+    async shootArrow(x, y) {
+        // 🌐 API'ye ok atışını bildir - BURAYA EKLE
+        if (this.api) {
+            await this.api.recordArrowShot(x, y);
+        }
+
+        // 🔥 Real-time monitoring'e action kaydet
+        if (this.realTimeMonitor) {
+            this.realTimeMonitor.recordAction('arrow_shot', {
+                velocityX: x,
+                velocityY: y,
+                playerPosition: { x: this.player.x, y: this.player.y }
+            });
+        }
+
+        // 📊 Rate limiting'e arrow shot kaydet
+        if (this.rateLimiting) {
+            this.rateLimiting.recordArrowShot(x, y);
+        }
+        // Ateş etme sesi çal
+        this.shootSound.play();
         let fireballTexture;
         let rnd = Phaser.Math.Between(1, 3)
         switch (rnd) {
@@ -535,55 +3012,73 @@ class GameScene extends Phaser.Scene {
         arrow.body.setCircle(275, 275);
         arrow.body.setOffset(0, 0); // Görselin içine göre konumu ayarla
         arrow.setVelocity(x, y);
+        arrow.setAngularVelocity(Phaser.Math.Between(-300, 300))
+
+
+        // SOPA GERİ GİTME ANİMASYONU:
+        let originalX = this.player.x;
+        this.tweens.add({
+            targets: this.player,
+            x: originalX - 15,  // 15 piksel geri git
+            duration: 80,       // 80ms'de geri git
+            ease: 'Power2',
+            yoyo: true,         // geri dön
+            onComplete: () => {
+                this.player.x = originalX; // Orijinal pozisyona kesinlikle dön
+            }
+        });
+
+        // ATEŞ EFEKTİ EKLE:
+        let muzzleFlash = this.add.circle(355, this.game.config.height / 2 - 120, 30, 0xffffff);
+        muzzleFlash.setDepth(102);
+        muzzleFlash.setAlpha(0.8);
+
+        this.tweens.add({
+            targets: muzzleFlash,
+            scaleX: { from: 0.5, to: 2 },
+            scaleY: { from: 0.5, to: 2 },
+            alpha: { from: 0.8, to: 0 },
+            duration: 150,
+            ease: 'Power2',
+            onComplete: () => {
+                muzzleFlash.destroy();
+            }
+        });
+
+        this.arrowsFired++;
     }
 
     // Item ekleme
     addItem(locY) {
         if (!this.gameActive) return;
-        if (!this.recommendedImages || this.recommendedImages.length === 0) return;
 
-        let xArray = [];
-        let y, velocity;
-        for (let index = config.width / 2 + 100; index < config.width; index += 100) {
+        let xArray = []; // X koordinatları için bir dizi oluştur
+        let y;
+        let velocity;
+        for (let index = config.width / 2 + 100; index < config.width; index += 100) { // 100 piksel aralıklarla X koordinatlarını ekle
             xArray.push(index);
         }
         let x = xArray[Phaser.Math.Between(0, xArray.length - 1)];
-        if (locY == 'top') {
+        if (locY == 'top') { //yukarıda spawn olsun ve aşağı doğru gitsin
             y = Phaser.Math.Between(-100, -300);
             velocity = Phaser.Math.Between(100, 300);
-        } else if (locY == 'bottom') {
+        }
+        else if (locY == 'bottom') { //aşağıda spawn olsun ve yukarı doğru gitsin
             y = Phaser.Math.Between(config.height + 100, config.height + 300);
             velocity = Phaser.Math.Between(-100, -300);
-        } else {
+        }
+        else {
             console.error('Geçersiz konum: ' + locY);
             return;
         }
-
-        let imageUrl = Phaser.Utils.Array.GetRandom(this.recommendedImages);
-        let imageName = imageUrl.substring(imageUrl.lastIndexOf('/') + 1, imageUrl.lastIndexOf('.'));
-
-        const spawn = () => {
-            let item = this.items.create(x, y, imageName);
-            item.from = locY;
-            item.setScale(0.2);
-            item.body.setAllowGravity(false);
-            item.setVelocityY(velocity);
-        };
-
-        if (!this.textures.exists(imageName) && !this.loadedImageKeys.has(imageName)) {
-            this.load.image(imageName, imageUrl);
-            this.loadedImageKeys.add(imageName);
-
-            this.load.once('filecomplete-image-' + imageName, () => {
-                spawn();
-            });
-
-            this.load.start();
-        } else {
-            spawn();
-        }
+        let item = this.items.create(x, y, 'item');
+        item.from = locY; // Itemin konumunu kaydet
+        item.scale = 0.2; // Item boyutunu ayarla
+        item.setDepth(20);
+        item.body.setAllowGravity(false); // Itemlerin yerçekimi etkisi olmasın
+        item.setVelocityY(velocity)
+        this.itemsSpawned++;
     }
-
 
     //bomba ekleme
     addBomb(locY) {
@@ -614,14 +3109,94 @@ class GameScene extends Phaser.Scene {
         bomb.setAngularVelocity(Phaser.Math.Between(-100, 100)); // Bombanın rastgele dönmesini sağla
         bomb.body.setAllowGravity(false); // Bombaların yerçekimi etkisi olmasın
         bomb.setVelocityY(velocity);
+        this.bombsSpawned++;
     }
 
     // Iteme vurma işlemi
-    hitItem(arrow, item) {
-        item.destroy(); // Itemi yok et
-        arrow.destroy(); // Okun kendisini yok et
-        this.score += 10; // Skoru artır
-        this.itemScoreText.setText(this.score); // Yazıyı güncelle
+    async hitItem(arrow, item) {
+        // Coin toplama sesi çal
+        this.coinSound.play();
+        // 1) Varolan skor mantığı
+        this.itemsHit++;
+        item.destroy();
+        arrow.destroy();
+        this.score += 10;
+        this.itemScoreText.setText(this.score);
+
+        // 🔥 Real-time monitoring'e action kaydet
+        if (this.realTimeMonitor) {
+            this.realTimeMonitor.recordAction('item_hit', {
+                score: this.score,
+                itemPosition: { x: item.x, y: item.y },
+                arrowPosition: { x: arrow.x, y: arrow.y }
+            });
+        }
+
+        // 🌐 API'ye item hit bildir - BURAYA EKLE
+        if (this.api) {
+            const result = await this.api.recordItemHit(this.score);
+            if (result && result.isVictory) {
+                console.log('🏆 Backend victory onayladı!');
+            }
+        }
+
+        // 2) Zaman bonusu
+        const bonus = 3;
+        this.initialTime += bonus;
+
+        // 3) Timer metnine pulse & renk animasyonu
+        this.tweens.add({
+            targets: this.timerText,
+            scale: 1.4,
+            duration: 200,
+            yoyo: true,
+            ease: 'Sine.easeInOut'
+        });
+
+        // Renk geçişi
+        this.tweens.addCounter({
+            from: 0, to: 100,
+            duration: 400,
+            onUpdate: tween => {
+                const v = tween.getValue();
+                const c = Phaser.Display.Color.Interpolate.ColorWithColor(
+                    new Phaser.Display.Color(255, 255, 0),  // sarı
+                    new Phaser.Display.Color(0, 255, 0),    // yeşil
+                    100, v
+                );
+                const hex = Phaser.Display.Color.GetColor(c.r, c.g, c.b);
+                this.timerText.setStyle({ color: '#' + hex.toString(16).padStart(6, '0') });
+            },
+            onComplete: () => {
+                this.timerText.setStyle({ color: '#ffffff' }); // orijinal yeşile dönüş
+            }
+        });
+
+        // 4) Floating “+Xs” text efekti
+        const fx = this.add.text(
+            this.timerText.x + this.timerText.width + 8,
+            this.timerText.y,
+            `+${bonus}s`,
+            {
+                fontSize: '24px',
+                fontFamily: 'monospace',
+                fill: '#ffffff',
+                stroke: '#00ff00',
+                strokeThickness: 3
+            }
+        )
+            .setDepth(20)
+            .setOrigin(0, 0.5);
+
+        this.tweens.add({
+            targets: fx,
+            y: fx.y - 30,    // yukarıya kaydır
+            alpha: 0,        // şeffaflaştır
+            duration: 800,
+            ease: 'Cubic.easeOut',
+            onComplete: () => fx.destroy()
+        });
+
 
         if (this.score >= 500) {
             this.handleGameWin();
@@ -629,12 +3204,32 @@ class GameScene extends Phaser.Scene {
     }
 
     //bomba vurma işlemi
-    hitBomb(arrow, bomb) {
+    async hitBomb(arrow, bomb) {
+        // Bomba patlaması sesi çal
+        this.bombSound.play();
         bomb.destroy(); // Bombayı yok et
         arrow.destroy(); // Okun kendisini yok et
+        this.bombsHit++;
 
         if (this.hearts > 0) {
             this.hearts--; // Canı azalt
+
+            // 🔥 Real-time monitoring'e action kaydet
+            if (this.realTimeMonitor) {
+                this.realTimeMonitor.recordAction('bomb_hit', {
+                    hearts: this.hearts,
+                    bombPosition: { x: bomb.x, y: bomb.y },
+                    arrowPosition: { x: arrow.x, y: arrow.y }
+                });
+            }
+
+            // 🌐 API'ye bomb hit bildir - BURAYA EKLE
+            if (this.api) {
+                const result = await this.api.recordBombHit(this.hearts);
+                if (result && result.isGameOver) {
+                    console.log('💀 Backend game over onayladı!');
+                }
+            }
 
             const heartToRemove = this.heartIcons[this.hearts];
 
@@ -672,10 +3267,7 @@ class GameScene extends Phaser.Scene {
 
         // Can 0'a düşerse oyunu bitir
         if (this.hearts <= 0) {
-            this.gameActive = false;
-            this.clearScreen();
-            this.sound.stopAll();
-            this.scene.start('GameOverScene', { finalScore: this.score });
+            this.handleGameOver();
         }
     }
 
@@ -685,10 +3277,81 @@ class GameScene extends Phaser.Scene {
         this.arrows.clear(true, true);
     }
 
+    handleGameOver() {
+        this.gameActive = false;
+        // 🛡️ Güvenlik sistemlerini durdur
+        if (this.realTimeMonitor) {
+            this.realTimeMonitor.stop();
+        }
+
+        if (this.snapshotProtection) {
+            this.snapshotProtection.stop();
+        }
+
+        if (this.honeypot) {
+            this.honeypot.cleanup();
+        }
+        if (this.variableProtection) {
+            this.variableProtection.stop();
+        }
+        if (this.rateLimiting) {
+            this.rateLimiting.stop();
+        }
+        if (this.positionValidation) {
+            this.positionValidation.stop();
+        }
+
+        console.log('🛡️ All security systems stopped');
+        this.clearScreen();
+        this.sound.stopAll();
+        this.lightningTimer.remove();
+        this.scene.start('GameOverScene', {
+            finalScore: this.score,
+            heartsLeft: this.hearts,
+            arrowsFired: this.arrowsFired,
+            itemsSpawned: this.itemsSpawned,
+            bombsSpawned: this.bombsSpawned,
+            itemsHit: this.itemsHit,
+            bombsHit: this.bombsHit,
+            durationMs: this.durationMs,
+            didWin: this.didWin,
+        });
+    }
+
     handleGameWin() {
+        // Seviye tamamlama sesi çal
+        this.levelCompleteSound.play();
+        this.backgroundMusic.stop();
+        this.lightningTimer.remove();
+        this.countdownTimer.remove();
+
+        // 🛡️ Güvenlik sistemlerini durdur
+        if (this.realTimeMonitor) {
+            this.realTimeMonitor.stop();
+        }
+
+        if (this.snapshotProtection) {
+            this.snapshotProtection.stop();
+        }
+
+        if (this.honeypot) {
+            this.honeypot.cleanup();
+        }
+        if (this.variableProtection) {
+            this.variableProtection.stop();
+        }
+        if (this.rateLimiting) {
+            this.rateLimiting.stop();
+        }
+        if (this.positionValidation) {
+            this.positionValidation.stop();
+        }
+
+
+        console.log('🛡️ All security systems stopped - GAME WON');
+
         // 1) Anında beyazı “yak”
         this.fadeRect.alpha = 1;
-
         // 2) Arkaplanları değiştir
         this.backgroundSpace.setDepth(100);
         this.player.setDepth(100);
@@ -704,6 +3367,8 @@ class GameScene extends Phaser.Scene {
 
 
         this.gameActive = false;
+        this.didWin = true;
+
         this.clearScreen();
         this.trophy = this.physics.add.sprite(config.width / 2 + 200, config.height / 2, 'trophy');
         this.trophy.setDepth(100);
@@ -720,7 +3385,17 @@ class GameScene extends Phaser.Scene {
         });
 
         this.physics.add.overlap(this.arrows, this.trophy, () => {
-            this.scene.start('WinScene');
+            this.scene.start('WinScene', {
+                finalScore: this.score,
+                heartsLeft: this.hearts,
+                arrowsFired: this.arrowsFired,
+                itemsSpawned: this.itemsSpawned,
+                bombsSpawned: this.bombsSpawned,
+                itemsHit: this.itemsHit,
+                bombsHit: this.bombsHit,
+                durationMs: this.durationMs,
+                didWin: this.didWin,
+            });
         });
 
     }
@@ -756,27 +3431,43 @@ class GameOverScene extends Phaser.Scene {
     }
 
     preload() {
-        this.load.image('game-over', 'assets_w/ui/game-over.png');
+        this.load.image('game-over', 'assets_w/ui/gameover-screen.png');
         this.load.image('restart-button', 'assets_w/ui/restart-red.png');
         this.load.image('score-image', 'assets_w/ui/score-image.png');    // Ses açık ikonu
+
+        // Ses dosyası
+        this.load.audio('game-over-sound', 'assets_w/audio/game-over.mp3');
+        this.load.audio('button-click', 'assets_w/audio/button-click.mp3');
     }
 
-    create(data) {
-        let finalScore = data.finalScore || 0;
+    init(data) {
+        this.finalScore = data.finalScore;
+        this.heartsLeft = data.heartsLeft;
+        this.arrowsFired = data.arrowsFired;
+        this.itemsSpawned = data.itemsSpawned;
+        this.bombsSpawned = data.bombsSpawned;
+        this.itemsHit = data.itemsHit;
+        this.bombsHit = data.bombsHit;
+        this.durationMs = data.durationMs;
+        this.didWin = data.didWin;
+    }
 
+    create() {
+        // Game over sesi çal
+        this.gameOverSound = this.sound.add('game-over-sound', { volume: 0.5 });
+        this.gameOverSound.play();
 
-
+        this.buttonClickSound = this.sound.add('button-click', { volume: 0.7 });
         // "Game Over" Yazısı
-        this.gameOverText = this.add.image(this.game.config.width / 2, config.height / 2 - 200, 'game-over')
+        this.gameOverText = this.add.image(config.width / 2, config.height / 2, 'game-over')
         this.gameOverText.setOrigin(0.5, 0.5);
-        this.gameOverText.setScale(0.75);
 
         //skor yazısı
-        this.FinalScoreText = this.add.text(config.width / 2, config.height / 2 + 120, 'Score : ' + finalScore, {
+        this.FinalScoreText = this.add.text(config.width / 2, config.height / 2 + 220, 'Score : ' + this.finalScore, {
             fontSize: '50px',
             fontWeight: 'bold',
-            fill: '#d00000',
-            stroke: '#e85d04',
+            fill: '#fe3a29',
+            stroke: '#fe3a29',
             strokeThickness: 4
         });
         this.FinalScoreText.setOrigin(0.5, 0.5);
@@ -809,14 +3500,17 @@ class GameOverScene extends Phaser.Scene {
             buttonTween.resume();
         });
 
-        startButton.on('pointerdown', () => {
-            startButton.disableInteractive();
-            startButton.setVisible(false);
-            this.scene.start('GameScene', { images: this.recommendedImages });
-        });
+        restartButton.on('pointerdown', () => {
+            this.sound.stopAll();
+            this.buttonClickSound.play();
+            restartButton.disableInteractive();
+            restartButton.setVisible(false);
+            this.scene.start('GameScene');
 
+        });
     }
 }
+
 
 class WinScene extends Phaser.Scene {
     constructor() {
@@ -824,14 +3518,38 @@ class WinScene extends Phaser.Scene {
     }
 
     preload() {
-        this.load.image('win-text', 'assets_w/ui/win.png');
+        this.load.image('win', 'assets_w/ui/win-screen.png');
         this.load.image('restart', 'assets_w/ui/restart-green.png')
+
+        // Ses dosyası
+        this.load.audio('win-sound', 'assets_w/audio/victory.mp3');
+        this.load.audio('button-click', 'assets_w/audio/button-click.mp3');
     }
 
+    init(data) {
+        this.finalScore = data.finalScore;
+        this.heartsLeft = data.heartsLeft;
+        this.arrowsFired = data.arrowsFired;
+        this.itemsSpawned = data.itemsSpawned;
+        this.bombsSpawned = data.bombsSpawned;
+        this.itemsHit = data.itemsHit;
+        this.bombsHit = data.bombsHit;
+        this.durationMs = data.durationMs;
+        this.didWin = data.didWin;
+    }
+
+
+
+
     create() {
+        // Kazanma sesi çal
+        this.winSound = this.sound.add('win-sound', { volume: 0.6 });
+        this.winSound.play();
+
+        this.buttonClickSound = this.sound.add('button-click', { volume: 0.7 });
 
         //kazandınız yazısı
-        this.winText = this.add.image(config.width / 2, config.height / 2 - 200, 'win-text');
+        this.winText = this.add.image(config.width / 2, config.height / 2, 'win');
 
         // tekrar-oyna button
         const restartButton = this.add.image(config.width / 2, config.height - 200, 'restart');
@@ -850,7 +3568,7 @@ class WinScene extends Phaser.Scene {
 
         // Buton efektleri
         restartButton.on('pointerover', () => {
-            restartButton.setScale(0.45);
+            restartButton.setScale(0.4);
             buttonTween.pause();
         });
 
@@ -860,6 +3578,8 @@ class WinScene extends Phaser.Scene {
         });
 
         restartButton.on('pointerdown', () => {
+            this.sound.stopAll();
+            this.buttonClickSound.play();
             restartButton.disableInteractive();
             restartButton.setVisible(false);
             this.scene.start('GameScene');
@@ -889,6 +3609,5 @@ const config = {
 
 const game = new Phaser.Game(config);
 
-//TODO: ateş toplarına dönme ekle
-//TODO: sesleri ekle
+
 //* J -> uzay kısmı K -> win ekranı L -> gameover ekranı 
