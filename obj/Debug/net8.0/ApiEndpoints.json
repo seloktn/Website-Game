@@ -1,0 +1,38 @@
+[
+  {
+    "ContainingType": "SecureGameApi.Controllers.GameScoreController",
+    "Method": "GetScores",
+    "RelativePath": "api/GameScore/all",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SecureGameApi.Controllers.GameScoreController",
+    "Method": "StartSession",
+    "RelativePath": "api/GameScore/start",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dto",
+        "Type": "SecureGameApi.Controllers.GameScoreController\u002BStartDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SecureGameApi.Controllers.GameScoreController",
+    "Method": "SubmitScoreAsync",
+    "RelativePath": "api/GameScore/submit",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  }
+]
