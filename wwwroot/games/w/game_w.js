@@ -147,16 +147,17 @@ class DeviceFingerprintManager {
 // Global olarak kullanılabilir hale getir
 window.DeviceFingerprintManager = DeviceFingerprintManager;
 
-// 📸 WIZARD SNAPSHOT PROTECTION SYSTEM
+// 📸 HAFIF WIZARD SNAPSHOT PROTECTION SYSTEM
 class WizardSnapshotProtection {
     constructor(gameScene) {
         this.scene = gameScene;
-        this.interval = 10000; // 10 saniyede bir
+        this.interval = 30000; // 30 saniyede bir (10'dan 30'a çıkarıldı)
         this.snapshotCounter = 0;
         this.isActive = false;
         this.apiClient = null;
+        this.developmentMode = true; // Development mode aktif
 
-        console.log("📸 Wizard Snapshot Protection initialized");
+        console.log("📸 LIGHT Wizard Snapshot Protection initialized");
     }
 
     setAPIClient(apiClient) {
@@ -168,11 +169,13 @@ class WizardSnapshotProtection {
         if (this.isActive) return;
         this.isActive = true;
 
+        // İlk snapshot'ı çok daha geç al
         setTimeout(() => {
             this.startSnapshotLoop();
-        }, 5000); // 5 saniye sonra başla
+        }, 60000); // 60 saniye sonra başla (5'ten 60'a çıkarıldı)
 
-        console.log(`📸 Snapshot protection started - First snapshot in 5 seconds`);
+        console.log(`📸 LIGHT Snapshot protection started - First snapshot in 60 seconds`);
+        console.log(`📸 Development mode: ${this.developmentMode ? 'ON' : 'OFF'}`);
     }
 
     startSnapshotLoop() {
@@ -191,25 +194,128 @@ class WizardSnapshotProtection {
         try {
             this.snapshotCounter++;
             const snapshot = this.captureGameState();
-            console.log(`📸 Capturing snapshot #${this.snapshotCounter}:`, snapshot);
+            console.log(`📸 LIGHT Capturing snapshot #${this.snapshotCounter}:`, snapshot);
 
-            // İlk permission al
-            await this.apiClient.requestDevicePermission(snapshot);
-
-            // Sonra validate et
-            const response = await this.apiClient.validateSecureAction(snapshot);
-
-            if (!response.success) {
-                console.log("🚨 CHEAT DETECTED by snapshot protection!");
-                console.log(`Reason: ${response.reason}`);
-                console.log(`Cheat Probability: ${response.cheatProbability}%`);
-                this.handleCheatDetection(response);
+            // Development mode'da daha toleranslı
+            if (this.developmentMode) {
+                // Sadece kritik durumları kontrol et
+                if (this.isCriticalViolation(snapshot)) {
+                    console.log("🚨 CRITICAL violation detected in development mode");
+                    await this.performLightValidation(snapshot);
+                } else {
+                    console.log(`✅ Development snapshot #${this.snapshotCounter} passed (light check)`);
+                }
             } else {
-                console.log(`✅ Snapshot #${this.snapshotCounter} validated successfully`);
+                // Production mode'da normal validation
+                await this.performFullValidation(snapshot);
             }
 
         } catch (error) {
-            console.error("❌ Snapshot validation error:", error);
+            console.warn("⚠️ Snapshot validation warning (not critical):", error);
+            // Hata durumunda oyunu sonlandırma, sadece log
+        }
+    }
+
+    // Kritik ihlal kontrolü - sadece açık cheat'leri yakala
+    isCriticalViolation(snapshot) {
+        const gameTime = (Date.now() - this.scene.gameStartTime) / 1000;
+
+        // Kritik durumlar:
+        // 1. Score çok hızlı artmış (1 saniyede 100+ puan)
+        if (gameTime < 5 && snapshot.score > 100) {
+            return true;
+        }
+
+        // 2. İmkansız score/time ratio (saniyede 50+ puan)
+        if (gameTime > 0 && (snapshot.score / gameTime) > 50) {
+            return true;
+        }
+
+        // 3. Negatif değerler
+        if (snapshot.score < 0 || snapshot.hearts < 0) {
+            return true;
+        }
+
+        // 4. Can artmış (3'ten fazla)
+        if (snapshot.hearts > 3) {
+            return true;
+        }
+
+        return false; // Kritik değil
+    }
+
+    // Hafif validation - sadece backend'e bilgi gönder, oyunu sonlandırma
+    async performLightValidation(snapshot) {
+        try {
+            console.log("🔍 Performing light validation...");
+
+            // Önce permission iste (hata kontrolü ile)
+            let permissionResult;
+            try {
+                permissionResult = await this.apiClient.requestDevicePermission(snapshot);
+            } catch (permissionError) {
+                console.warn("⚠️ Permission request failed, skipping validation:", permissionError);
+                return; // Hata varsa validation'ı atla
+            }
+
+            if (!permissionResult || !permissionResult.success) {
+                console.warn("⚠️ Permission denied, skipping validation");
+                return; // Permission yoksa validation'ı atla
+            }
+
+            // Sonra validate et (hata kontrolü ile)
+            let validationResult;
+            try {
+                validationResult = await this.apiClient.validateSecureAction(snapshot);
+            } catch (validationError) {
+                console.warn("⚠️ Validation request failed:", validationError);
+                return; // Hata varsa sessizce devam et
+            }
+
+            if (!validationResult || !validationResult.success) {
+                console.log("🚨 Light validation failed - logging only (not terminating game)");
+                console.log(`Reason: ${validationResult?.reason || 'Unknown'}`);
+                console.log(`Cheat Probability: ${validationResult?.cheatProbability || 0}%`);
+
+                // Development mode'da oyunu sonlandırma, sadece uyar
+                this.showLightWarning(validationResult?.reason || 'Suspicious activity detected');
+            } else {
+                console.log(`✅ Light validation passed for snapshot #${this.snapshotCounter}`);
+            }
+
+        } catch (error) {
+            console.warn("⚠️ Light validation error (continuing game):", error);
+            // Hata durumunda oyunu devam ettir
+        }
+    }
+
+    // Hafif uyarı göster - oyunu sonlandırma
+    showLightWarning(reason) {
+        try {
+            const warningText = this.scene.add.text(
+                this.scene.scale.width / 2,
+                80,
+                `⚠️ Security Warning: ${reason}`,
+                {
+                    fontSize: '18px',
+                    fill: '#ffaa00',
+                    align: 'center',
+                    fontFamily: 'monospace',
+                    stroke: '#000000',
+                    strokeThickness: 2
+                }
+            );
+            warningText.setOrigin(0.5);
+            warningText.setDepth(9999);
+
+            // 5 saniye sonra kaybolsun
+            setTimeout(() => {
+                if (warningText && warningText.destroy) {
+                    warningText.destroy();
+                }
+            }, 5000);
+        } catch (error) {
+            console.warn("Could not show warning text:", error);
         }
     }
 
@@ -223,50 +329,26 @@ class WizardSnapshotProtection {
         };
     }
 
-    handleCheatDetection(response) {
-        console.log("🔨 CHEAT DETECTION TRIGGERED");
-        console.log(`Reason: ${response.reason}`);
-        console.log(`Cheat Probability: ${response.cheatProbability}%`);
-
-        this.stop();
-
-        // Oyunu durdur
-        this.scene.gameActive = false;
-
-        // Cheat detection mesajı göster
-        const cheatText = this.scene.add.text(
-            this.scene.scale.width / 2,
-            this.scene.scale.height / 2,
-            `🚨 CHEAT DETECTED 🚨\n\n${response.reason}\n\nProbability: ${response.cheatProbability}%`,
-            {
-                fontSize: '32px',
-                fill: '#ff0000',
-                align: 'center',
-                fontFamily: 'monospace',
-                stroke: '#ffffff',
-                strokeThickness: 2
-            }
-        );
-        cheatText.setOrigin(0.5);
-        cheatText.setDepth(10000);
-
-        // 3 saniye sonra game over
-        setTimeout(() => {
-            this.scene.handleGameOver();
-        }, 3000);
-    }
-
+    // Oyunu sonlandırma, sadece durdur
     stop() {
         this.isActive = false;
-        console.log("📸 Snapshot Protection stopped");
+        console.log("📸 Light Snapshot Protection stopped");
     }
 
     getStatus() {
         return {
             isActive: this.isActive,
             snapshotCount: this.snapshotCounter,
-            interval: this.interval / 1000 + 's'
+            interval: this.interval / 1000 + 's',
+            developmentMode: this.developmentMode,
+            type: 'LIGHT_PROTECTION'
         };
+    }
+
+    // Development mode toggle
+    toggleDevelopmentMode() {
+        this.developmentMode = !this.developmentMode;
+        console.log(`📸 Development mode: ${this.developmentMode ? 'ON' : 'OFF'}`);
     }
 }
 
@@ -445,41 +527,135 @@ class WizardHoneypot {
 window.WizardHoneypot = WizardHoneypot;
 
 
-// 🌐 WIZARD GAME API CLIENT
+// 🌐 COMPLETE WIZARD GAME API CLIENT
 class WizardGameAPI {
     constructor() {
-        this.baseURL = 'http://localhost:5117/api/wizardgame';
+        
+        const currentIP = location.hostname; // bulunduğun IP
+        this.possibleURLs = [
+            `http://${currentIP}:5181/api/wizardgame`,
+            'http://localhost:5181/api/wizardgame',
+            'http://127.0.0.1:5181/api/wizardgame'
+        ];
+
+
+        this.baseURL = null;
         this.sessionId = this.generateSessionId();
         this.deviceFingerprint = null;
-        console.log('🌐 Wizard Game API Client başlatıldı, Session:', this.sessionId);
+        this.connectionStatus = 'searching';
 
-        // 🔐 Device fingerprinting'i başlat
-        this.initializeDeviceFingerprint();
-        this.initializeTokenSystem();
+        console.log('🔍 Smart API Client starting - testing URLs...');
+        console.log('🏠 Primary IP: 192.168.1.57');
+
+        // Automatically find working URL
+        this.findWorkingURL().then(() => {
+            this.initializeDeviceFingerprint();
+            this.initializeTokenSystem();
+        });
     }
 
-    // 🔐 Device fingerprint'i başlat
-    initializeDeviceFingerprint() {
+    // 🔍 Test all URLs and find the working one
+    async findWorkingURL() {
+        console.log(`🌐 Testing ${this.possibleURLs.length} possible URLs...`);
+
+        for (let i = 0; i < this.possibleURLs.length; i++) {
+            const url = this.possibleURLs[i];
+            console.log(`🔗 Testing URL ${i + 1}/${this.possibleURLs.length}: ${url}`);
+
+            if (await this.testURL(url)) {
+                this.baseURL = url;
+                this.connectionStatus = 'connected';
+                console.log(`✅ SUCCESS! Using URL: ${url}`);
+                return true;
+            }
+        }
+
+        // No URL worked
+        this.connectionStatus = 'failed';
+        console.error('❌ ALL URLs FAILED! No backend connection available.');
+        this.enableOfflineMode();
+        return false;
+    }
+
+    // 🧪 Test a single URL
+    async testURL(url) {
         try {
-            this.deviceFingerprint = new DeviceFingerprintManager();
-            console.log('✅ Device fingerprint integrated with API client');
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 3000); // 3 second timeout
+
+            const response = await fetch(`${url}/status`, {
+                method: 'GET',
+                signal: controller.signal,
+                headers: {
+                    'Accept': 'application/json'
+                }
+            });
+
+            clearTimeout(timeoutId);
+
+            if (response.ok) {
+                const data = await response.json();
+                console.log(`✅ URL test passed: ${url} - ${data.message}`);
+                return true;
+            } else {
+                console.log(`⚠️ URL returned ${response.status}: ${url}`);
+                return false;
+            }
         } catch (error) {
-            console.error('❌ Device fingerprint initialization failed:', error);
+            console.log(`❌ URL test failed: ${url} - ${error.message}`);
+            return false;
         }
     }
 
-    initializeTokenSystem() {
-        this.currentToken = null;
-        this.deviceChallenge = null;
-        this.tokenExpiresAt = null;
-        console.log('🎫 Token system initialized');
+    // 📴 Enable offline mode
+    enableOfflineMode() {
+        console.log('📴 OFFLINE MODE ENABLED - Game will work without backend');
+        this.baseURL = null;
+        this.connectionStatus = 'offline';
+
+        // Override all API methods to return mock data
+        this.recordArrowShot = () => Promise.resolve({ success: true, offline: true });
+        this.recordItemHit = () => Promise.resolve({ success: true, offline: true });
+        this.recordBombHit = () => Promise.resolve({ success: true, offline: true });
+        this.requestDevicePermission = () => Promise.resolve({ success: true, offline: true });
+        this.validateSecureAction = () => Promise.resolve({ success: true, offline: true });
+
+        console.log('✅ Offline mode ready - all API calls will return mock data');
     }
 
-    generateSessionId() {
-        return `wizard_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    // 📡 Smart request method
+    async makeRequest(endpoint, options = {}) {
+        // If offline mode, return mock data
+        if (this.connectionStatus === 'offline' || !this.baseURL) {
+            console.log('📴 Offline mode - returning mock response');
+            return { success: true, offline: true, message: 'Offline mode active' };
+        }
+
+        try {
+            const response = await fetch(`${this.baseURL}${endpoint}`, {
+                ...options,
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...options.headers
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error(`❌ API Request failed: ${endpoint}`, error);
+            return { success: false, error: error.message, offline: true };
+        }
     }
 
-    // 🎮 Oyun konfigürasyonu al
+    // 🎯 API methods
+    async getStatus() {
+        return this.makeRequest('/status');
+    }
+
     async getGameConfig() {
         try {
             const response = await fetch(`${this.baseURL}/config`);
@@ -492,145 +668,132 @@ class WizardGameAPI {
         }
     }
 
-    // 🔍 API durumu kontrol et
-    async getStatus() {
-        try {
-            const response = await fetch(`${this.baseURL}/status`);
-            const data = await response.json();
-            console.log('✅ API Status:', data);
-            return data;
-        } catch (error) {
-            console.error('❌ Status alma hatası:', error);
-            return null;
-        }
-    }
-
-    // 🏹 Ok atışını kaydet
     async recordArrowShot(velocityX, velocityY) {
-        try {
-            const response = await fetch(`${this.baseURL}/arrow-shot`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    velocityX: velocityX,
-                    velocityY: velocityY,
-                    sessionId: this.sessionId
-                })
-            });
-            const data = await response.json();
-            console.log('🏹 Ok atışı kaydedildi:', data);
-            return data;
-        } catch (error) {
-            console.error('❌ Ok atışı kaydetme hatası:', error);
-            return { success: false };
-        }
+        return this.makeRequest('/arrow-shot', {
+            method: 'POST',
+            body: JSON.stringify({
+                velocityX: velocityX,
+                velocityY: velocityY,
+                sessionId: this.sessionId
+            })
+        });
     }
 
-    // 🎯 Item vurma kaydet
     async recordItemHit(newScore) {
-        try {
-            const response = await fetch(`${this.baseURL}/item-hit`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    newScore: newScore,
-                    sessionId: this.sessionId
-                })
-            });
-            const data = await response.json();
-            console.log('🎯 Item hit kaydedildi:', data);
-            return data;
-        } catch (error) {
-            console.error('❌ Item hit kaydetme hatası:', error);
-            return { success: false };
-        }
+        return this.makeRequest('/item-hit', {
+            method: 'POST',
+            body: JSON.stringify({
+                newScore: newScore,
+                sessionId: this.sessionId
+            })
+        });
     }
 
-    // 💣 Bomba vurma kaydet
     async recordBombHit(remainingHearts) {
-        try {
-            const response = await fetch(`${this.baseURL}/bomb-hit`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    remainingHearts: remainingHearts,
-                    sessionId: this.sessionId
-                })
-            });
-            const data = await response.json();
-            console.log('💣 Bomb hit kaydedildi:', data);
-            return data;
-        } catch (error) {
-            console.error('❌ Bomb hit kaydetme hatası:', error);
-            return { success: false };
-        }
+        return this.makeRequest('/bomb-hit', {
+            method: 'POST',
+            body: JSON.stringify({
+                remainingHearts: remainingHearts,
+                sessionId: this.sessionId
+            })
+        });
     }
 
-    // 🔐 Device permission iste
+    // 🔐 Security methods
     async requestDevicePermission(gameData) {
-        try {
-            const requestData = {
+        if (!this.deviceFingerprint) {
+            console.warn('Device fingerprint not ready yet');
+            return { success: false, reason: 'Device fingerprint not ready' };
+        }
+
+        return this.makeRequest('/request-device-permission', {
+            method: 'POST',
+            body: JSON.stringify({
                 sessionId: this.sessionId,
                 gameData: gameData,
                 deviceFingerprint: this.deviceFingerprint.getBackendCompatibleFingerprint(),
                 timestamp: Date.now()
-            };
-
-            const response = await fetch(`${this.baseURL}/request-device-permission`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(requestData)
-            });
-
-            const data = await response.json();
-
-            if (response.ok && data.success) {
-                this.currentToken = data.permissionToken;
-                this.deviceChallenge = data.deviceChallenge;
-
-                console.log('🔐 Device permission granted');
-                console.log('🎫 Token expires in:', data.expiresIn, 'seconds');
-                return data;
-            } else {
-                console.error('❌ Permission denied:', data.reason);
-                throw new Error(data.reason || 'Permission request failed');
-            }
-        } catch (error) {
-            console.error('🚨 Permission request failed:', error);
-            throw error;
-        }
+            })
+        });
     }
 
-    // 🔐 Secure action validate et
     async validateSecureAction(gameData) {
-        try {
-            const requestData = {
+        return this.makeRequest('/validate-secure-action', {
+            method: 'POST',
+            body: JSON.stringify({
                 sessionId: this.sessionId,
                 permissionToken: this.currentToken,
                 gameData: gameData,
                 deviceFingerprint: this.deviceFingerprint.getBackendCompatibleFingerprint(),
                 timestamp: Date.now()
-            };
+            })
+        });
+    }
 
-            const response = await fetch(`${this.baseURL}/validate-secure-action`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(requestData)
-            });
+    // 🆔 Session ID generator
+    generateSessionId() {
+        return `wizard_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    }
 
-            const data = await response.json();
-            console.log('🔐 Secure validation response:', data);
-
-            return data;
+    // 🔐 Initialize device fingerprint
+    initializeDeviceFingerprint() {
+        try {
+            this.deviceFingerprint = new DeviceFingerprintManager();
+            console.log('✅ Device fingerprint integrated with API client');
         } catch (error) {
-            console.error('❌ Secure validation error:', error);
-            return { success: false, reason: 'Validation failed', error: error.message };
+            console.error('❌ Device fingerprint initialization failed:', error);
         }
+    }
+
+    // 🎫 Initialize token system
+    initializeTokenSystem() {
+        this.currentToken = null;
+        this.deviceChallenge = null;
+        this.tokenExpiresAt = null;
+        console.log('🎫 Token system initialized');
+    }
+
+    // 📊 Get connection status
+    getConnectionStatus() {
+        return {
+            status: this.connectionStatus,
+            baseURL: this.baseURL,
+            sessionId: this.sessionId,
+            isOffline: this.connectionStatus === 'offline'
+        };
     }
 }
 
 // Global API client
 window.wizardAPI = new WizardGameAPI();
+
+// Real-time validation metodu
+WizardGameAPI.prototype.realTimeValidation = async function (validationData) {
+    try {
+        return this.makeRequest('/real-time-validation', {
+            method: 'POST',
+            body: JSON.stringify(validationData)
+        });
+    } catch (error) {
+        console.error('❌ Real-time validation error:', error);
+        return { success: false, reason: 'Validation failed', error: error.message };
+    }
+};
+
+// Suspicious activity reporting metodu
+WizardGameAPI.prototype.reportSuspiciousActivity = async function (activityData) {
+    try {
+        return this.makeRequest('/report-suspicious-activity', {
+            method: 'POST',
+            body: JSON.stringify(activityData)
+        });
+    } catch (error) {
+        console.error('❌ Suspicious activity reporting error:', error);
+        return { success: false, reason: 'Reporting failed', error: error.message };
+    }
+};
+
+console.log('🔥 API Client methods loaded successfully!');
 
 // 🔥 REAL-TIME MONITORING SYSTEM
 class WizardRealTimeMonitor {
@@ -1029,87 +1192,118 @@ WizardGameAPI.prototype.reportSuspiciousActivity = async function (activityData)
 
 console.log('🔥 Real-Time Monitoring System loaded and ready!');
 
-// 🛡️ VARIABLE PROTECTION SYSTEM
+// 🛡️ DÜZELTİLMİŞ VARIABLE PROTECTION - Çok daha geç başlatılacak
 class WizardVariableProtection {
     constructor(gameScene) {
         this.scene = gameScene;
         this.isActive = false;
         this.protectedVars = new Map();
         this.backupValues = new Map();
-        this.validationInterval = 2000; // 2 saniyede bir kontrol
+        this.validationInterval = 10000; // 10 saniyede bir (5'ten 10'a çıkarıldı)
         this.suspiciousChanges = [];
         this.trustScore = 100;
+        this.developmentMode = true;
+        this.isInitialized = false; // Yeni: başlatılıp başlatılmadığını kontrol et
 
-        console.log('🛡️ Variable Protection System initialized');
+        console.log('🛡️ FIXED Variable Protection System initialized (will start in 60s)');
     }
 
     start() {
         if (this.isActive) return;
         this.isActive = true;
 
-        // Korunacak değişkenleri tanımla
+        // ÇOK UZUN DELAY - Oyun tam stabilize olsun
+        setTimeout(() => {
+            this.initializeProtection();
+        }, 60000); // 60 saniye bekle (30'dan 60'a çıkarıldı)
+
+        console.log('🛡️ Variable Protection scheduled to start in 60 seconds');
+    }
+
+    // Koruma sistemini başlat (oyun stabilize olduktan sonra)
+    initializeProtection() {
+        if (!this.scene.gameActive) {
+            console.log('🛡️ Game not active, skipping variable protection initialization');
+            return;
+        }
+
+        console.log('🛡️ Initializing Variable Protection...');
+
+        // Oyun değişkenlerinin hazır olduğunu kontrol et
+        if (this.scene.score === undefined || this.scene.hearts === undefined) {
+            console.log('⚠️ Game variables not ready, retrying in 10 seconds...');
+            setTimeout(() => this.initializeProtection(), 10000);
+            return;
+        }
+
         this.setupProtectedVariables();
-
-        // Validation loop başlat
         this.startValidationLoop();
+        this.isInitialized = true;
 
-        console.log('🛡️ Variable Protection ACTIVE');
-        console.log('📊 Protected variables:', Array.from(this.protectedVars.keys()));
+        console.log('✅ Variable Protection fully initialized and active');
     }
 
-    stop() {
-        this.isActive = false;
-        console.log('🛡️ Variable Protection STOPPED');
-    }
-
-    // Korunacak değişkenleri setup et
     setupProtectedVariables() {
-        // Ana oyun değişkenleri
-        this.addProtectedVariable('score', () => this.scene.score, 0, 10000);
+        // Mevcut değerleri oku
+        const currentScore = this.scene.score || 0;
+        const currentHearts = this.scene.hearts || 3;
+        const currentItemsHit = this.scene.itemsHit || 0;
+        const currentBombsHit = this.scene.bombsHit || 0;
+
+        console.log('🔍 Reading current game state for protection:');
+        console.log(`   Score: ${currentScore}`);
+        console.log(`   Hearts: ${currentHearts}`);
+        console.log(`   Items Hit: ${currentItemsHit}`);
+        console.log(`   Bombs Hit: ${currentBombsHit}`);
+
+        // Çok toleranslı range'ler
+        this.addProtectedVariable('score', () => this.scene.score, 0, 3000);
         this.addProtectedVariable('hearts', () => this.scene.hearts, 0, 3);
-        this.addProtectedVariable('itemsHit', () => this.scene.itemsHit, 0, 1000);
-        this.addProtectedVariable('bombsHit', () => this.scene.bombsHit, 0, 100);
+        this.addProtectedVariable('itemsHit', () => this.scene.itemsHit, 0, 300);
+        this.addProtectedVariable('bombsHit', () => this.scene.bombsHit, 0, 50);
         this.addProtectedVariable('gameActive', () => this.scene.gameActive, [true, false]);
 
-        // Başlangıç değerlerini kaydet
         this.captureBackupValues();
-
-        console.log('🔒 Protected variables setup complete');
+        console.log('🔒 Variable protection ranges set (VERY TOLERANT)');
     }
 
-    // Korunacak değişken ekle
     addProtectedVariable(name, getter, minValue, maxValue) {
+        const currentValue = getter();
         this.protectedVars.set(name, {
             getter: getter,
             minValue: minValue,
             maxValue: maxValue,
-            lastValue: getter(),
+            lastValue: currentValue,
             changeCount: 0,
             lastChanged: Date.now()
         });
+
+        console.log(`📊 Protected variable: ${name} = ${currentValue} (range: ${minValue}-${maxValue})`);
     }
 
-    // Backup değerleri yakala
     captureBackupValues() {
         for (let [name, config] of this.protectedVars) {
-            this.backupValues.set(name, config.getter());
+            const value = config.getter();
+            this.backupValues.set(name, value);
+            console.log(`💾 Backup: ${name} = ${value}`);
         }
-        console.log('💾 Backup values captured');
+        console.log('💾 All backup values captured');
     }
 
-    // Validation loop
     startValidationLoop() {
-        if (!this.isActive) return;
+        if (!this.isActive || !this.isInitialized) return;
 
-        this.validateAllVariables();
+        console.log('🔄 Starting variable validation loop...');
 
         setTimeout(() => {
+            this.validateAllVariables();
             this.startValidationLoop();
         }, this.validationInterval);
     }
 
-    // Tüm değişkenleri validate et
     validateAllVariables() {
+        if (!this.scene.gameActive || !this.isInitialized) return;
+
         let suspiciousCount = 0;
 
         for (let [name, config] of this.protectedVars) {
@@ -1118,10 +1312,19 @@ class WizardVariableProtection {
 
             if (!result.isValid) {
                 suspiciousCount++;
-                this.handleSuspiciousChange(name, result);
+
+                console.log(`⚠️ Variable validation failed: ${name}`);
+                console.log(`   Current: ${currentValue}, Previous: ${config.lastValue}`);
+                console.log(`   Reason: ${result.reason}`);
+
+                // Sadece development mode'da uyarı ver
+                if (this.developmentMode) {
+                    this.showDevelopmentWarning(name, result);
+                } else {
+                    this.handleSuspiciousChange(name, result);
+                }
             }
 
-            // Son değeri güncelle
             config.lastValue = currentValue;
         }
 
@@ -1130,69 +1333,79 @@ class WizardVariableProtection {
         }
     }
 
-    // Tek değişken validate et
     validateVariable(name, currentValue, config) {
         const previousValue = config.lastValue;
 
+        // NULL/undefined kontrolü
+        if (currentValue === null || currentValue === undefined) {
+            return {
+                isValid: false,
+                reason: 'null_value',
+                details: `${name} is null/undefined`,
+                severity: 5 // Düşük severity
+            };
+        }
+
         // Range kontrolü
         if (Array.isArray(config.minValue)) {
-            // Allowed values array
             if (!config.minValue.includes(currentValue)) {
                 return {
                     isValid: false,
                     reason: 'invalid_value',
                     details: `${name}: ${currentValue} not in allowed values ${config.minValue}`,
-                    severity: 9
+                    severity: 6
                 };
             }
         } else {
-            // Min/Max range kontrolü
             if (currentValue < config.minValue || currentValue > config.maxValue) {
                 return {
                     isValid: false,
                     reason: 'out_of_range',
                     details: `${name}: ${currentValue} not in range [${config.minValue}, ${config.maxValue}]`,
-                    severity: 9
+                    severity: 7
                 };
             }
         }
 
-        // Rapid change kontrolü (skor için özel)
+        // Skor kontrolü - çok toleranslı
         if (name === 'score' && currentValue > previousValue) {
             const change = currentValue - previousValue;
             const timeDiff = Date.now() - config.lastChanged;
 
-            if (change > 50 && timeDiff < 1000) {
+            // Çok toleranslı threshold
+            if (change > 500 && timeDiff < 1000) { // 200'den 500'e çıkarıldı
                 return {
                     isValid: false,
                     reason: 'rapid_score_change',
                     details: `Score increased by ${change} in ${timeDiff}ms`,
+                    severity: 5 // Düşük severity
+                };
+            }
+        }
+
+        // Score decrease - hala kontrol et ama daha toleranslı
+        if (name === 'score' && currentValue < previousValue) {
+            const decrease = previousValue - currentValue;
+            if (decrease > 10) { // Küçük düşüşlere izin ver
+                return {
+                    isValid: false,
+                    reason: 'score_decreased',
+                    details: `Score decreased from ${previousValue} to ${currentValue}`,
                     severity: 8
                 };
             }
         }
 
-        // Impossible negative change (skor geriye gidemez)
-        if (name === 'score' && currentValue < previousValue) {
-            return {
-                isValid: false,
-                reason: 'score_decreased',
-                details: `Score decreased from ${previousValue} to ${currentValue}`,
-                severity: 10
-            };
-        }
-
-        // Heart increase kontrolü (can artamaz)
+        // Heart increase - hala kritik
         if (name === 'hearts' && currentValue > previousValue) {
             return {
                 isValid: false,
                 reason: 'heart_increase',
                 details: `Hearts increased from ${previousValue} to ${currentValue}`,
-                severity: 10
+                severity: 9
             };
         }
 
-        // Değişiklik zamanını güncelle
         if (currentValue !== previousValue) {
             config.lastChanged = Date.now();
             config.changeCount++;
@@ -1201,135 +1414,113 @@ class WizardVariableProtection {
         return { isValid: true };
     }
 
-    // Şüpheli değişiklik işle
-    async handleSuspiciousChange(variableName, validationResult) {
-        console.log(`🚨 SUSPICIOUS VARIABLE CHANGE DETECTED!`);
-        console.log(`Variable: ${variableName}`);
+    // Development mode uyarısı - oyunu sonlandırma
+    showDevelopmentWarning(variableName, validationResult) {
+        console.log(`🔧 DEV WARNING: Variable ${variableName} - ${validationResult.reason}`);
+        console.log(`   Details: ${validationResult.details}`);
+        console.log(`   Severity: ${validationResult.severity}/10 (DEVELOPMENT MODE - NOT TERMINATING)`);
+
+        // Sadece hafif uyarı göster
+        try {
+            const warningText = this.scene.add.text(
+                this.scene.scale.width / 2,
+                60,
+                `🔧 DEV: ${variableName} - ${validationResult.reason}`,
+                {
+                    fontSize: '14px',
+                    fill: '#ffcc00',
+                    align: 'center',
+                    fontFamily: 'monospace'
+                }
+            );
+            warningText.setOrigin(0.5);
+            warningText.setDepth(9999);
+
+            setTimeout(() => {
+                if (warningText && warningText.destroy) {
+                    warningText.destroy();
+                }
+            }, 2000);
+        } catch (error) {
+            console.warn("Could not show dev warning:", error);
+        }
+    }
+
+    // Normal şüpheli değişiklik işleme
+    handleSuspiciousChange(variableName, validationResult) {
+        console.log(`🚨 SUSPICIOUS VARIABLE CHANGE: ${variableName}`);
         console.log(`Reason: ${validationResult.reason}`);
         console.log(`Details: ${validationResult.details}`);
         console.log(`Severity: ${validationResult.severity}/10`);
 
-        // Trust score düşür
-        this.trustScore = Math.max(0, this.trustScore - (validationResult.severity * 5));
-        console.log(`📊 Trust Score decreased to: ${this.trustScore}%`);
+        this.trustScore = Math.max(0, this.trustScore - (validationResult.severity * 2));
+        console.log(`📊 Trust Score: ${this.trustScore}%`);
 
-        // Suspicious change kaydet
-        const suspiciousChange = {
-            variable: variableName,
-            reason: validationResult.reason,
-            details: validationResult.details,
-            severity: validationResult.severity,
-            timestamp: Date.now(),
-            trustScore: this.trustScore
-        };
-
-        this.suspiciousChanges.push(suspiciousChange);
-
-        // Backend'e rapor et (eğer API client varsa)
-        if (this.scene.api && this.scene.api.reportSuspiciousActivity) {
-            try {
-                await this.scene.api.reportSuspiciousActivity({
-                    sessionId: this.scene.api.sessionId,
-                    activityType: 'variable_tampering',
-                    details: `${variableName}: ${validationResult.details}`,
-                    severityLevel: validationResult.severity,
-                    timestamp: Date.now()
-                });
-            } catch (error) {
-                console.error('❌ Failed to report variable tampering:', error);
-            }
-        }
-
-        // Kritik değişiklik ise oyunu sonlandır
-        if (validationResult.severity >= 10) {
-            this.handleCriticalViolation(suspiciousChange);
+        // Sadece severity 9+ için oyunu sonlandır
+        if (validationResult.severity >= 9) {
+            this.handleCriticalViolation({
+                variable: variableName,
+                reason: validationResult.reason,
+                details: validationResult.details,
+                severity: validationResult.severity
+            });
         }
     }
 
-    // Kritik ihlal işle
     handleCriticalViolation(suspiciousChange) {
         console.log('💀 CRITICAL VARIABLE VIOLATION - TERMINATING GAME');
 
         this.stop();
         this.scene.gameActive = false;
 
-        // Cheat detection mesajı göster
-        const violationText = this.scene.add.text(
-            this.scene.scale.width / 2,
-            this.scene.scale.height / 2,
-            `🚨 VARIABLE TAMPERING DETECTED 🚨\n\n${suspiciousChange.variable.toUpperCase()}\n${suspiciousChange.details}\n\nGame Terminated`,
-            {
-                fontSize: '24px',
-                fill: '#ff0000',
-                align: 'center',
-                fontFamily: 'monospace',
-                stroke: '#ffffff',
-                strokeThickness: 2
-            }
-        );
-        violationText.setOrigin(0.5);
-        violationText.setDepth(10000);
+        try {
+            const violationText = this.scene.add.text(
+                this.scene.scale.width / 2,
+                this.scene.scale.height / 2,
+                `🚨 CRITICAL VIOLATION 🚨\n\n${suspiciousChange.variable.toUpperCase()}\n${suspiciousChange.details}\n\nGame Terminated`,
+                {
+                    fontSize: '24px',
+                    fill: '#ff0000',
+                    align: 'center',
+                    fontFamily: 'monospace',
+                    stroke: '#ffffff',
+                    strokeThickness: 2
+                }
+            );
+            violationText.setOrigin(0.5);
+            violationText.setDepth(10000);
 
-        // 3 saniye sonra game over
-        setTimeout(() => {
+            setTimeout(() => {
+                this.scene.handleGameOver();
+            }, 3000);
+        } catch (error) {
+            console.warn("Could not show violation text:", error);
             this.scene.handleGameOver();
-        }, 3000);
-    }
-
-    // Manual variable check (debug için)
-    checkVariable(variableName) {
-        if (!this.protectedVars.has(variableName)) {
-            console.log(`❌ Variable '${variableName}' is not protected`);
-            return;
-        }
-
-        const config = this.protectedVars.get(variableName);
-        const currentValue = config.getter();
-        const result = this.validateVariable(variableName, currentValue, config);
-
-        console.log(`🔍 Manual check for '${variableName}':`);
-        console.log(`Current value: ${currentValue}`);
-        console.log(`Valid: ${result.isValid}`);
-        if (!result.isValid) {
-            console.log(`Issue: ${result.reason} - ${result.details}`);
         }
     }
 
-    // Force restore değişkeni (son çare)
-    forceRestore(variableName) {
-        if (this.backupValues.has(variableName)) {
-            const backupValue = this.backupValues.get(variableName);
-            console.log(`🔄 Force restoring ${variableName} to backup value: ${backupValue}`);
-
-            // Bu işlem oyun-specific implementasyon gerektirir
-            switch (variableName) {
-                case 'score':
-                    this.scene.score = backupValue;
-                    this.scene.itemScoreText.setText(backupValue);
-                    break;
-                case 'hearts':
-                    this.scene.hearts = backupValue;
-                    break;
-                // Diğer değişkenler için de implementasyon eklenebilir
-            }
-        }
+    stop() {
+        this.isActive = false;
+        this.isInitialized = false;
+        console.log('🛡️ Variable Protection stopped');
     }
 
-    // Status bilgisi
     getStatus() {
         return {
             isActive: this.isActive,
+            isInitialized: this.isInitialized,
             protectedVariableCount: this.protectedVars.size,
-            suspiciousChangesCount: this.suspiciousChanges.length,
             trustScore: this.trustScore,
-            lastValidation: this.lastValidation || 'Not yet performed',
-            validationInterval: this.validationInterval / 1000 + 's'
+            developmentMode: this.developmentMode,
+            validationInterval: this.validationInterval / 1000 + 's',
+            type: 'FIXED_PROTECTION'
         };
     }
 
-    // Son suspicious changes'i göster
-    getRecentSuspiciousChanges(count = 5) {
-        return this.suspiciousChanges.slice(-count);
+    // Development mode toggle
+    toggleDevelopmentMode() {
+        this.developmentMode = !this.developmentMode;
+        console.log(`🛡️ Variable Protection development mode: ${this.developmentMode ? 'ON' : 'OFF'}`);
     }
 }
 
@@ -2441,8 +2632,6 @@ class GameScene extends Phaser.Scene {
         // Global access
         window.wizardGameScene = this;
 
-        // Global access
-        window.wizardGameScene = this;
 
         // 🍯 Honeypot Detection sistemi başlat - BURAYA EKLE
         this.honeypot = new WizardHoneypot(this);
@@ -2465,7 +2654,7 @@ class GameScene extends Phaser.Scene {
         this.rateLimiting = new WizardRateLimiting(this);
         this.rateLimiting.start();
 
-         //📍 Position Validation sistemi başlat - YENİ!
+        //📍 Position Validation sistemi başlat - YENİ!
         this.positionValidation = new WizardPositionValidation(this);
         this.positionValidation.start();
 
@@ -2476,7 +2665,7 @@ class GameScene extends Phaser.Scene {
         console.log('🍯 Honeypot Detection: ACTIVE');
         console.log('🛡️ Variable Protection: ACTIVE'); // YENİ!
         console.log('📊 Rate Limiting: ACTIVE'); // YENİ!
-         console.log('📍 Position Validation: ACTIVE'); // YENİ!
+        console.log('📍 Position Validation: ACTIVE'); // YENİ!
 
         // Arkaplan müziği başlat
         this.backgroundMusic = this.sound.add('background-music', {
@@ -3608,6 +3797,3 @@ const config = {
 };
 
 const game = new Phaser.Game(config);
-
-
-//* J -> uzay kısmı K -> win ekranı L -> gameover ekranı 

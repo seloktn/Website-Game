@@ -32,6 +32,19 @@ namespace WizardGameAPI.Controllers
             _logger = logger;
         }
 
+        // TEST ENDPOINT - Bu satırları GetStatus'tan ÖNCE ekleyin
+        [HttpGet("test")]
+        public IActionResult Test()
+        {
+            _logger.LogInformation("🧪 Test endpoint çağrıldı");
+            return Ok(new
+            {
+                message = "API Test Successful!",
+                timestamp = DateTime.Now,
+                ip = "192.168.1.57"
+            });
+        }
+
         //  Oyun konfigürasyonu
         [HttpGet("config")]
         public IActionResult GetGameConfig()
@@ -249,10 +262,10 @@ namespace WizardGameAPI.Controllers
                 if (!validationResult.IsValid)
                 {
                     _logger.LogWarning($"❌ Real-time validation failed: {validationResult.Reason}");
-                    return Ok(new 
-                    { 
-                        success = false, 
-                        reason = validationResult.Reason, 
+                    return Ok(new
+                    {
+                        success = false,
+                        reason = validationResult.Reason,
                         cheatProbability = validationResult.CheatProbability,
                         action = "terminate_session"
                     });
