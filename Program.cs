@@ -14,7 +14,6 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowGameClient", policy =>
     {
         policy
-          .WithOrigins("http://localhost:5181")    //TODO: oyunun çalıştığı adresi gir
           .AllowAnyMethod()
           .WithHeaders("Content-Type", "X-Signature");
     });

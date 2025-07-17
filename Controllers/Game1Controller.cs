@@ -131,7 +131,7 @@ namespace SecureGameApi.Controllers
                 return BadRequest("Şüpheli toplanan coin sayısı");
             if (data.Score > data.CoinCollected * 10)
                 return BadRequest("Şüpheli skor/toplanan coin verisi");
-            if (data.Hearts < 0 || data.Hearts > 6)
+            if (data.Hearts < -3 || data.Hearts > 6)
                 return BadRequest("Şüpheli can sayısı");
             if (data.DamageTaken > 6 || data.DamageTaken < 0)
                 return BadRequest("Şüpheli hasar alma sayısı");

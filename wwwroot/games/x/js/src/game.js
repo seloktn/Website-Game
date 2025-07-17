@@ -659,6 +659,7 @@ class GameScene extends Phaser.Scene {
     handleGameOver() {
         this.gameActive = false;
         this.physics.world.pause();
+        this.sound.stopAll();
         this.gameMetrics.endTime = this.time.now;
         this.time.delayedCall(1000, () => {
             this.scene.start('GameOverScene', { score: this.gameMetrics.score });
@@ -723,7 +724,7 @@ class GameScene extends Phaser.Scene {
 
 
         // 3) İmzayı header’da gönder
-        fetch("http://localhost:5181/api/gamescore/submit", { //5181
+        fetch("/api/gamescore/submit", { //5181
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -739,7 +740,7 @@ class GameScene extends Phaser.Scene {
             .catch(err => console.error("Gönderim hatası:", err));
     }
     createToken() {
-        fetch("http://localhost:5181/api/gamescore/start", {
+        fetch("/api/gamescore/start", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ playerId: this.gameMetrics.playerId })

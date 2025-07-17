@@ -52,8 +52,8 @@ wwwroot\games\x\js\package-lock.json
 wwwroot\games\x\js\package.json
 wwwroot\games\x\js\scripts\gen-integrity.js
 wwwroot\games\x\js\scripts\update-sri.sh
-wwwroot\games\x\js\src\tamperCheck.js
 wwwroot\games\x\js\src\utils.js
+wwwroot\games\x\start.html
 wwwroot\images\cocacola.png
 wwwroot\images\coin.png
 wwwroot\images\redbull.png
@@ -120,4 +120,3 @@ wwwroot\games\x\js\dist\game.bundle.js
 wwwroot\games\x\js\dist\game.bundle.js.map
 wwwroot\games\x\js\dist\integrity.json
 wwwroot\games\x\js\src\game.js
-wwwroot\games\x\start.html
