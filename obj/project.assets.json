@@ -8,23 +8,23 @@
     "net8.0": []
   },
   "packageFolders": {
-    "C:\\Users\\monster\\.nuget\\packages\\": {},
+    "C:\\Users\\Alp\\.nuget\\packages\\": {},
     "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\monster\\Desktop\\Games\\Website-Game\\ECommerceGameSite.csproj",
+      "projectUniqueName": "C:\\Users\\Alp\\Source\\Repos\\Website-Game\\ECommerceGameSite.csproj",
       "projectName": "ECommerceGameSite",
-      "projectPath": "C:\\Users\\monster\\Desktop\\Games\\Website-Game\\ECommerceGameSite.csproj",
-      "packagesPath": "C:\\Users\\monster\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\monster\\Desktop\\Games\\Website-Game\\obj\\",
+      "projectPath": "C:\\Users\\Alp\\Source\\Repos\\Website-Game\\ECommerceGameSite.csproj",
+      "packagesPath": "C:\\Users\\Alp\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\Alp\\Source\\Repos\\Website-Game\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
       ],
       "configFilePaths": [
-        "C:\\Users\\monster\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\Alp\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
@@ -51,7 +51,7 @@
         "auditLevel": "low",
         "auditMode": "direct"
       },
-      "SdkAnalysisLevel": "9.0.200"
+      "SdkAnalysisLevel": "9.0.300"
     },
     "frameworks": {
       "net8.0": {
@@ -75,7 +75,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.202/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.302/PortableRuntimeIdentifierGraph.json"
       }
     }
   }
