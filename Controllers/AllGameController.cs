@@ -1,0 +1,40 @@
+using Microsoft.AspNetCore.Mvc;
+using System.Collections.Generic;
+
+namespace ECommerceGameSite.Controllers
+{
+    public class GameController : Controller
+    {
+        public IActionResult Index()
+        {
+            List<string> games = new List<string> { "ToptanJump", "Y", "Z", "W" }; // Oyunlar listesi
+            return View(games); // Listeyi Index View'a gönderiyoruz
+        }
+
+        public IActionResult Start(string gameName)
+        {
+            if (gameName == "ToptanJump")
+            {
+                // X oyunu için özel oyun başlatma işlemi
+                return Redirect("/games/x/start.html");
+            }
+            else if (gameName == "Y")
+            {
+                // Y oyunu için özel oyun başlatma işlemi
+                 return Redirect("/games/y/start_y.html");
+            }
+            else if (gameName == "Z")
+            {
+                // Z oyunu için özel oyun başlatma işlemi
+                 return Redirect("/games/z/start_z.html");
+            }
+            else if (gameName == "W")
+            {
+                // W oyunu için özel oyun başlatma işlemi
+                 return Redirect("/games/w/start_w.html");
+            }
+
+            return NotFound(); // Eğer oyun bulunamazsa 404 döndür
+        }
+    }
+}

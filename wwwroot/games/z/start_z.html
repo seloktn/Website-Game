@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dino Oyunu</title>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.js"></script>
+</head>
+<body>
+    <script src="game_z.js"></script>
+    <script>
+        const config = {
+            type: Phaser.AUTO,
+            width: 1400,
+            height: 700,
+            backgroundColor: '#87CEEB',
+            physics: {
+                default: 'arcade',
+                arcade: {
+                    gravity: { y: 2000 },
+                    debug: DEBUG_COLLISIONS      
+                }
+            },
+            scale: {
+                mode: Phaser.Scale.FIT,
+                autoCenter: Phaser.Scale.CENTER_BOTH
+            },
+            scene: [GameStartScene, GameScene, GameOverScene, VictoryScene]
+        };
+
+        // CREATE GAME AND MAKE IT GLOBALLY ACCESSIBLE
+        window.game = new Phaser.Game(config);
+        
+        // INITIALIZE ORIENTATION MANAGER
+        OrientationManager.init();
+    </script>
+</body>
+</html>

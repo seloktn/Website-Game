@@ -1,0 +1,464 @@
+[
+  {
+    "ContainingType": "GameAPI.Controllers.GameController",
+    "Method": "ValidateCoinBatch",
+    "RelativePath": "api/game/coin/collect-batch",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "GameAPI.Controllers.CoinBatchSubmissionRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "GameAPI.Controllers.GameController",
+    "Method": "GetCoinDifficulty",
+    "RelativePath": "api/game/coin/difficulty/{coinCount}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "coinCount",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "GameAPI.Controllers.GameController",
+    "Method": "GetCoinInterval",
+    "RelativePath": "api/game/coin/interval",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "GameAPI.Controllers.GameController",
+    "Method": "GetCoinsBatch",
+    "RelativePath": "api/game/coins-batch",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "count",
+        "Type": "System.Int32",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "GameAPI.Controllers.GameController",
+    "Method": "GetGameConfig",
+    "RelativePath": "api/game/config",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "GameAPI.Controllers.GameController",
+    "Method": "GetSessionDebugInfo",
+    "RelativePath": "api/game/debug/session/{sessionId}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "sessionId",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "GameAPI.Controllers.GameController",
+    "Method": "GetAllSessionsDebugInfo",
+    "RelativePath": "api/game/debug/sessions",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "GameAPI.Controllers.GameController",
+    "Method": "SignalGameOver",
+    "RelativePath": "api/game/game-over-signal",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "signal",
+        "Type": "GameAPI.Controllers.GameOverSignal",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "GameAPI.Controllers.GameController",
+    "Method": "ServerHealth",
+    "RelativePath": "api/game/health",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "GameAPI.Controllers.GameController",
+    "Method": "ReportHoneypotCollision",
+    "RelativePath": "api/game/honeypot-collision",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "collision",
+        "Type": "GameAPI.Controllers.HoneypotCollision",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "GameAPI.Controllers.GameController",
+    "Method": "GetObstacleDifficulty",
+    "RelativePath": "api/game/obstacle/difficulty/{level}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "level",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "GameAPI.Controllers.GameController",
+    "Method": "GetObstaclesBatch",
+    "RelativePath": "api/game/obstacles-batch",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "count",
+        "Type": "System.Int32",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "GameAPI.Controllers.GameController",
+    "Method": "RequestDeviceBoundPermission",
+    "RelativePath": "api/game/request-device-bound-permission",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "GameAPI.Controllers.DeviceBoundPermissionRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "GameAPI.Controllers.GameController",
+    "Method": "SecureScoreSubmission",
+    "RelativePath": "api/game/score/secure-submit",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "GameAPI.Controllers.SecureScoreSubmissionRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "GameAPI.Controllers.GameController",
+    "Method": "ResetSession",
+    "RelativePath": "api/game/session/reset",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "GameAPI.Controllers.GameController",
+    "Method": "ReportTamperAttempt",
+    "RelativePath": "api/game/tamper-report",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "report",
+        "Type": "GameAPI.Controllers.TamperReport",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "GameAPI.Controllers.GameController",
+    "Method": "ValidateDeviceBoundAction",
+    "RelativePath": "api/game/validate-device-bound-action",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "GameAPI.Controllers.DeviceBoundActionRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SecureGameApi.Controllers.GameScoreController",
+    "Method": "GetScores",
+    "RelativePath": "api/GameScore/all",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SecureGameApi.Controllers.GameScoreController",
+    "Method": "StartSession",
+    "RelativePath": "api/GameScore/start",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dto",
+        "Type": "SecureGameApi.Controllers.GameScoreController\u002BStartDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "SecureGameApi.Controllers.GameScoreController",
+    "Method": "SubmitScoreAsync",
+    "RelativePath": "api/GameScore/submit",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "ECommerceGameSite.Controllers.GameYController",
+    "Method": "GetGameRules",
+    "RelativePath": "api/GameY/rules",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "ECommerceGameSite.Controllers.GameYController",
+    "Method": "SubmitScore",
+    "RelativePath": "api/GameY/submit",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "submission",
+        "Type": "ECommerceGameSite.Models.GameYScoreSubmissionDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "ECommerceGameSite.Controllers.GameYController",
+    "Method": "ValidateState",
+    "RelativePath": "api/GameY/validateState",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "snapshot",
+        "Type": "ECommerceGameSite.Models.GameStateSnapshot",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "WizardGameAPI.Controllers.WizardGameController",
+    "Method": "RecordArrowShot",
+    "RelativePath": "api/WizardGame/arrow-shot",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "WizardGameAPI.Controllers.ArrowShotRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "WizardGameAPI.Controllers.WizardGameController",
+    "Method": "RecordBombHit",
+    "RelativePath": "api/WizardGame/bomb-hit",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "WizardGameAPI.Controllers.BombHitRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "WizardGameAPI.Controllers.WizardGameController",
+    "Method": "GetGameConfig",
+    "RelativePath": "api/WizardGame/config",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "WizardGameAPI.Controllers.WizardGameController",
+    "Method": "RecordItemHit",
+    "RelativePath": "api/WizardGame/item-hit",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "WizardGameAPI.Controllers.ItemHitRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "WizardGameAPI.Controllers.WizardGameController",
+    "Method": "RealTimeValidation",
+    "RelativePath": "api/WizardGame/real-time-validation",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "WizardGameAPI.Controllers.RealTimeValidationRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "WizardGameAPI.Controllers.WizardGameController",
+    "Method": "ReportSuspiciousActivity",
+    "RelativePath": "api/WizardGame/report-suspicious-activity",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "WizardGameAPI.Controllers.SuspiciousActivityRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "WizardGameAPI.Controllers.WizardGameController",
+    "Method": "RequestDevicePermission",
+    "RelativePath": "api/WizardGame/request-device-permission",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "WizardGameAPI.Controllers.DevicePermissionRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "WizardGameAPI.Controllers.WizardGameController",
+    "Method": "GetStatus",
+    "RelativePath": "api/WizardGame/status",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "WizardGameAPI.Controllers.WizardGameController",
+    "Method": "Test",
+    "RelativePath": "api/WizardGame/test",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "WizardGameAPI.Controllers.WizardGameController",
+    "Method": "ValidateSecureAction",
+    "RelativePath": "api/WizardGame/validate-secure-action",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "WizardGameAPI.Controllers.SecureActionRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  }
+]
